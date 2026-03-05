@@ -1,6 +1,7 @@
 'use client'
 
 import { TranslationProvider } from '@/hooks/use-translations'
+import { AuthProvider } from '@/components/providers/auth-provider'
 
 export default function LocaleLayout({
   children,
@@ -10,8 +11,10 @@ export default function LocaleLayout({
   params: { locale: string }
 }) {
   return (
-    <TranslationProvider locale={params.locale}>
-      {children}
-    </TranslationProvider>
+    <AuthProvider>
+      <TranslationProvider locale={params.locale}>
+        {children}
+      </TranslationProvider>
+    </AuthProvider>
   )
 }

@@ -24,16 +24,18 @@ npm install
 
 ### 3. Configure environment
 
-The project is pre-configured to use SQLite for local development. A `.env` file is already included:
+The project is pre-configured to use SQLite for local development. The `.env` file should contain:
 
-```
+```env
+# Database - SQLite for local development
 DATABASE_URL="file:./dev.db"
-```
 
-For PostgreSQL (production), update `.env`:
-```bash
-# For production with PostgreSQL:
+# For PostgreSQL production, uncomment and configure:
 # DATABASE_URL="postgresql://user:password@localhost:5432/darency"
+
+# NextAuth
+NEXTAUTH_SECRET="development-secret-change-in-production"
+NEXTAUTH_URL="http://localhost:3000"
 ```
 
 ### 4. Generate Prisma client & create database
@@ -46,13 +48,36 @@ npx prisma generate
 npm run db:push
 ```
 
-### 5. Run development server
+### 5. Seed the database with demo data
+
+```bash
+npm run db:seed
+```
+
+This will create:
+- 1 Organization (Darency Property Management)
+- 1 Residence (Résidence Al-Manar)
+- 3 Apartments
+- 3 Demo users (Owner, Admin, Resident)
+- Sample expenses, payments, and maintenance requests
+
+### 6. Run development server
 
 ```bash
 npm run dev
 ```
 
 The app will be available at http://localhost:3000
+
+## Demo Credentials
+
+After seeding the database, you can log in with these accounts:
+
+| Role | Email | Password | Redirects to |
+|------|-------|----------|-------------|
+| **OWNER** | owner@darency.ma | Owner123! | /owner |
+| **ADMIN** | admin@darency.ma | Admin123! | /admin |
+| **RESIDENT** | resident@darency.ma | Resident123! | /resident |
 
 ## Available Scripts
 
@@ -66,6 +91,7 @@ The app will be available at http://localhost:3000
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:push` | Push schema to database |
 | `npm run db:studio` | Open Prisma Studio |
+| `npm run db:seed` | Seed database with demo data |
 
 ## Database
 
@@ -91,6 +117,7 @@ DATABASE_URL="postgresql://user:password@localhost:5432/darency"
 ```bash
 npx prisma generate
 npm run db:push
+npm run db:seed
 ```
 
 ## Troubleshooting
@@ -105,6 +132,7 @@ lsof -ti:3000 | xargs kill -9
 ```bash
 rm dev.db
 npm run db:push
+npm run db:seed
 ```
 
 ### Clear node_modules and reinstall

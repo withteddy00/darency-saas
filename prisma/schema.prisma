@@ -13,10 +13,9 @@ datasource db {
 
 // PostgreSQL enums (use String for SQLite)
 // enum Role {
-//   ADMIN
-//   MANAGER
-//   RESIDENT
 //   OWNER
+//   ADMIN
+//   RESIDENT
 // }
 
 // enum RequestStatus {
@@ -39,22 +38,27 @@ datasource db {
 //   OVERDUE
 // }
 
-model User {
+// ============== MULTI-TENANT MODELS ==============
+
+// Organization (Tenant)
+model Organization {
   id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
   name      String
-  role      String   @default("RESIDENT")
+  slug      String   @unique
+  email     String?
   phone     String?
+  address   String?
+  city      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  buildings       Building[]
-  resident        Resident[]
-  maintenanceRequests MaintenanceRequest[]
+  // Relations
+  users      User[]
+  residences Residence[]
 }
 
-model Building {
+// Residence (Building)
+model Residence {
   id          String   @id @default(cuid())
   name        String
   address     String
@@ -65,33 +69,84 @@ model Building {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  managerId        String
-  manager           User             @relation(fields: [managerId], references: [id])
-  residents         Resident[]
-  expenses          Expense[]
+  // Tenant relation
+  organizationId String
+  organization  Organization @relation(fields: [organizationId], references: [id])
+
+  // Relations
+  admins       Admin[]
+  apartments   Apartment[]
+  expenses     Expense[]
+  maintenanceRequests MaintenanceRequest[]
+
+  // For ADMIN users who manage this residence
+  adminUsers User[] @relation("AdminResidence")
+}
+
+// User (can be OWNER, ADMIN, or RESIDENT linked to Apartment)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("RESIDENT") // OWNER, ADMIN, RESIDENT
+  phone     String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Tenant relation (required for all users)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  // For ADMIN role - optionally linked to a Residence
+  adminForResidenceId String?
+  adminForResidence   Residence? @relation("AdminResidence", fields: [adminForResidenceId], references: [id])
+
+  // For RESIDENT role - linked to an Apartment (unique for one-to-one)
+  apartmentId String? @unique
+  apartment   Apartment? @relation("ResidentApartment", fields: [apartmentId], references: [id])
+
+  // Relations
+  admins              Admin[]
   maintenanceRequests MaintenanceRequest[]
 }
 
-model Resident {
+// Admin profile (specific to a Residence)
+model Admin {
   id          String   @id @default(cuid())
-  name        String
-  email       String   @unique
-  phone       String?
-  apartment   String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  residenceId String
+  residence   Residence @relation(fields: [residenceId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, residenceId])
+}
+
+// Apartment (within a Residence)
+model Apartment {
+  id          String   @id @default(cuid())
+  number      String   // Apartment number (e.g., "A12", "B4")
   floor       Int?
-  role        String   @default("RESIDENT")
-  isOwner     Boolean  @default(false)
+  building    String?  // Building block (A, B, C)
+  area        Float?   // Size in sqm
+  bedrooms    Int      @default(1)
+  bathrooms   Int      @default(1)
+  rentAmount  Float?   // Monthly rent
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  buildingId    String
-  building      Building        @relation(fields: [buildingId], references: [id])
-  userId        String?
-  user          User?           @relation(fields: [userId], references: [id])
-  payments      Payment[]
+  // Relations
+  residenceId String
+  residence   Residence @relation(fields: [residenceId], references: [id])
+
+  residentUser User? @relation("ResidentApartment")
+  payments     Payment[]
   maintenanceRequests MaintenanceRequest[]
 }
 
+// Expense
 model Expense {
   id          String   @id @default(cuid())
   description String
@@ -102,39 +157,41 @@ model Expense {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  buildingId String
-  building   Building @relation(fields: [buildingId], references: [id])
+  residenceId String
+  residence   Residence @relation(fields: [residenceId], references: [id])
 }
 
+// Payment
 model Payment {
   id        String   @id @default(cuid())
   amount    Float
   month     Int
   year      Int
-  status    String   @default("PENDING")
+  status    String   @default("PENDING") // PENDING, PAID, OVERDUE
   dueDate   DateTime
   paidDate  DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  residentId String
-  resident   Resident @relation(fields: [residentId], references: [id])
+  apartmentId String
+  apartment   Apartment @relation(fields: [apartmentId], references: [id])
 }
 
+// Maintenance Request
 model MaintenanceRequest {
   id          String   @id @default(cuid())
   title       String
   description String
-  status      String   @default("PENDING")
-  priority    String   @default("MEDIUM")
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   resolvedAt  DateTime?
 
-  buildingId  String
-  building    Building  @relation(fields: [buildingId], references: [id])
-  residentId  String
-  resident    Resident  @relation(fields: [residentId], references: [id])
+  residenceId String
+  residence   Residence @relation(fields: [residenceId], references: [id])
+  apartmentId String
+  apartment   Apartment @relation(fields: [apartmentId], references: [id])
   reportedById String
   reportedBy  User       @relation(fields: [reportedById], references: [id])
 }
