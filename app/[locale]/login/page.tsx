@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import { useTranslations } from '@/hooks/use-translations'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +15,7 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
   const [showLangMenu, setShowLangMenu] = useState(false)
 
   const validateForm = () => {
@@ -40,12 +41,26 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
     if (!validateForm()) return
     
     setIsLoading(true)
+    setErrors({})
     
-    // Simulate login
-    setTimeout(() => {
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      })
+
+      if (result?.error) {
+        setErrors({ general: result.error })
+        setIsLoading(false)
+      } else {
+        // Redirect based on role - will be handled by the dashboard pages
+        router.push(`/${locale}/login?callbackUrl=/${locale}/dashboard`)
+      }
+    } catch (error) {
+      setErrors({ general: 'An unexpected error occurred' })
       setIsLoading(false)
-      router.push(`/${locale}/dashboard`)
-    }, 1500)
+    }
   }
 
   const toggleLanguage = (newLocale: string) => {
@@ -108,6 +123,13 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
             </p>
           </div>
 
+          {/* Error Message */}
+          {errors.general && (
+            <div className="mb-4 p-3 bg-error/10 border border-error/20 rounded-lg text-error text-sm">
+              {errors.general}
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <Input
@@ -122,7 +144,7 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
 
             <Input
               type="password"
-              label={t('common.phone')}
+              label={t('common.password')}
               placeholder={t('auth.login.passwordPlaceholder')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -155,7 +177,7 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
           {/* Sign Up Link */}
           <p className="mt-8 text-center text-text-secondary">
             {t('auth.login.noAccount')}{' '}
-            <Link href={`/${locale}/login`} className="text-primary font-medium hover:underline">
+            <Link href={`/${locale}/register`} className="text-primary font-medium hover:underline">
               {t('auth.login.signUp')}
             </Link>
           </p>

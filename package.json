@@ -10,15 +10,19 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",
+    "bcryptjs": "^2.4.3",
     "next": "^14.2.35",
+    "next-auth": "^4.24.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
@@ -28,6 +32,7 @@
     "postcss": "^8.4.33",
     "prisma": "^5.10.0",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }
 }
