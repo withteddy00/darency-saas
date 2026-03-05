@@ -1,0 +1,225 @@
+{
+  "common": {
+    "appName": "دارينسي",
+    "tagline": "السيندك الذكي",
+    "loading": "جارٍ التحميل...",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث",
+    "filter": "تصفية",
+    "export": "تصدير",
+    "import": "استيراد",
+    "view": "عرض",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "submit": "إرسال",
+    "confirm": "تأكيد",
+    "yes": "نعم",
+    "no": "لا",
+    "all": "الكل",
+    "none": "لا شيء",
+    "status": "الحالة",
+    "actions": "الإجراءات",
+    "date": "التاريخ",
+    "amount": "المبلغ",
+    "description": "الوصف",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "address": "العنوان",
+    "name": "الاسم",
+    "city": "المدينة"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "dashboard": "لوحة التحكم",
+    "buildings": "المباني",
+    "residents": "المقيمون",
+    "finances": "المالية",
+    "requests": "الطلبات",
+    "settings": "الإعدادات",
+    "logout": "تسجيل الخروج",
+    "profile": "الملف الشخصي"
+  },
+  "landing": {
+    "hero": {
+      "title": "إدارة مبانيك بسهولة تامة",
+      "subtitle": "دارينسي هي منصة إدارة العقارات الأكثر شمولاً في المغرب. قم بمزامنة المدفوعات وطلبات الصيانة والتواصل مع المقيمين.",
+      "cta": "ابدأ مجاناً",
+      "ctaSecondary": "شاهد العرض التوضيحي"
+    },
+    "features": {
+      "title": "كل ما تحتاجه",
+      "subtitle": "حل شامل لإدارة مبانيك",
+      "buildings": {
+        "title": "إدارة المباني",
+        "description": "إدارة 여러 مبانٍ وعناوينها ومعلوماتها التفصيلية."
+      },
+      "residents": {
+        "title": "دليل المقيمين",
+        "description": "تتبع جميع المقيمين والمالكين وجهات الاتصال."
+      },
+      "finances": {
+        "title": "المتابعة المالية",
+        "description": "تتبع المصروفات والمدفوعات وإنشاء التقارير المالية."
+      },
+      "maintenance": {
+        "title": "طلبات الصيانة",
+        "description": "تلقي وإدارة طلبات الصيانة من المقيمين."
+      },
+      "communication": {
+        "title": "التواصل",
+        "description": "إرسال الإشعارات والتواصل مع المقيمين."
+      },
+      "reports": {
+        "title": "التقارير والتحليلات",
+        "description": "لوحات معلومات مفصلة لاتخاذ قرارات مدروسة."
+      }
+    },
+    "stats": {
+      "title": "أرقام تتحدث عن نفسها",
+      "buildings": "مبانٍ مُدارة",
+      "residents": "مقيم راض",
+      "requests": "طلبات تمت معالجتها",
+      "uptime": "التوفر"
+    },
+    "cta": {
+      "title": "مستعد لتبسيط الإدارة؟",
+      "subtitle": "انضم إلى مئات السينديكات الذين يثقون في دارينسي",
+      "button": "تجربة مجانية لمدة 14 يوماً"
+    },
+    "footer": {
+      "tagline": "تبسيط إدارة العقارات في المغرب",
+      "product": "المنتج",
+      "company": "الشركة",
+      "legal": "قانوني",
+      "contact": "اتصل بنا",
+      "privacy": "سياسة الخصوصية",
+      "terms": "شروط الاستخدام",
+      "copyright": "© 2024 دارينسي. جميع الحقوق محفوظة."
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "تسجيل الدخول",
+      "subtitle": "الوصول إلى حسابك دارينسي",
+      "emailPlaceholder": "بريدك الإلكتروني",
+      "passwordPlaceholder": "كلمة المرور",
+      "rememberMe": "تذكرني",
+      "forgotPassword": "نسيت كلمة المرور؟",
+      "submit": "تسجيل الدخول",
+      "noAccount": "ليس لديك حساب بعد؟",
+      "signUp": "إنشاء حساب",
+      "errors": {
+        "invalidEmail": "بريد إلكتروني غير صالح",
+        "invalidPassword": "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل",
+        "invalidCredentials": "بريد إلكتروني أو كلمة مرور غير صحيحة"
+      }
+    }
+  },
+  "dashboard": {
+    "welcome": "مرحباً",
+    "overview": "نظرة عامة",
+    "recentActivity": "النشاط الأخير",
+    "quickActions": "إجراءات سريعة",
+    "viewAll": "عرض الكل",
+    "stats": {
+      "buildings": "المباني",
+      "residents": "المقيمون",
+      "pendingRequests": "الطلبات المعلقة",
+      "monthlyRevenue": "إيرادات الشهر"
+    },
+    "charts": {
+      "expensesTitle": "مصروفات الشهر",
+      "requestsTitle": "الطلبات حسب الحالة"
+    },
+    "recentRequests": {
+      "title": "الطلبات الأخيرة",
+      "viewAll": "عرض جميع الطلبات"
+    },
+    "upcomingPayments": {
+      "title": "المدفوعات القادمة"
+    }
+  },
+  "buildings": {
+    "title": "المباني",
+    "add": "إضافة مبنى",
+    "list": {
+      "name": "الاسم",
+      "address": "العنوان",
+      "residents": "المقيمون",
+      "actions": "الإجراءات"
+    },
+    "form": {
+      "name": "اسم المبنى",
+      "address": "العنوان",
+      "city": "المدينة",
+      "postalCode": "الرمز البريدي",
+      "description": "الوصف"
+    }
+  },
+  "residents": {
+    "title": "المقيمون",
+    "add": "إضافة مقيم",
+    "list": {
+      "name": "الاسم",
+      "apartment": "الشقة",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "role": "الدور",
+      "actions": "الإجراءات"
+    },
+    "roles": {
+      "owner": "المالك",
+      "resident": "المقيم",
+      "manager": "السيندك"
+    }
+  },
+  "finances": {
+    "title": "المالية",
+    "expenses": "المصروفات",
+    "income": "الإيرادات",
+    "balance": "الرصيد",
+    "addExpense": "إضافة مصروف",
+    "addIncome": "إضافة إيراد",
+    "table": {
+      "date": "التاريخ",
+      "description": "الوصف",
+      "category": "الفئة",
+      "amount": "المبلغ"
+    }
+  },
+  "requests": {
+    "title": "طلبات الصيانة",
+    "add": "طلب جديد",
+    "status": {
+      "pending": "معلق",
+      "in_progress": "قيد التنفيذ",
+      "completed": "مكتمل",
+      "cancelled": "ملغى"
+    },
+    "priority": {
+      "low": "منخفضة",
+      "medium": "متوسطة",
+      "high": "عالية",
+      "urgent": "عاجلة"
+    },
+    "table": {
+      "title": "العنوان",
+      "description": "الوصف",
+      "status": "الحالة",
+      "priority": "الأولوية",
+      "date": "التاريخ"
+    }
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "profile": "الملف الشخصي",
+    "notifications": "الإشعارات",
+    "language": "اللغة",
+    "security": "الأمان"
+  }
+}

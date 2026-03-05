@@ -1,0 +1,225 @@
+{
+  "common": {
+    "appName": "Darency",
+    "tagline": "Syndic Smart",
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "import": "Importer",
+    "view": "Voir",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "submit": "Soumettre",
+    "confirm": "Confirmer",
+    "yes": "Oui",
+    "no": "Non",
+    "all": "Tout",
+    "none": "Aucun",
+    "status": "Statut",
+    "actions": "Actions",
+    "date": "Date",
+    "amount": "Montant",
+    "description": "Description",
+    "email": "Email",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "name": "Nom",
+    "city": "Ville"
+  },
+  "nav": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "buildings": "Immeubles",
+    "residents": "Résidents",
+    "finances": "Finances",
+    "requests": "Demandes",
+    "settings": "Paramètres",
+    "logout": "Déconnexion",
+    "profile": "Profil"
+  },
+  "landing": {
+    "hero": {
+      "title": "Gérez vos immeubles en toute simplicité",
+      "subtitle": "Darency est la plateforme de gestion de propriétés la plus complète au Maroc. Synchronisez les paiements, les demandes de maintenance et la communication avec les résidents.",
+      "cta": "Commencer gratuitement",
+      "ctaSecondary": "Voir la démo"
+    },
+    "features": {
+      "title": "Tout ce dont vous avez besoin",
+      "subtitle": "Une solution complète pour la gestion de vos immeubles",
+      "buildings": {
+        "title": "Gestion des Immeubles",
+        "description": "Gérez plusieurs immeubles, leurs adresses et leurs informations détaillées."
+      },
+      "residents": {
+        "title": "Annuaire des Résidents",
+        "description": "Gardez une trace de tous les résidents, propriétaires et contacts."
+      },
+      "finances": {
+        "title": "Suivi Financier",
+        "description": "Suivez les dépenses, les paiements et générez des rapports financiers."
+      },
+      "maintenance": {
+        "title": "Demandes de Maintenance",
+        "description": "Recevez et gérez les demandes de maintenance des résidents."
+      },
+      "communication": {
+        "title": "Communication",
+        "description": "Envoyez des notifications et maintenez le contact avec les résidents."
+      },
+      "reports": {
+        "title": "Rapports & Analytics",
+        "description": "Des tableaux de bord détaillés pour prendre des décisions éclairées."
+      }
+    },
+    "stats": {
+      "title": "Des chiffres qui parlent",
+      "buildings": "Immeubles gérés",
+      "residents": "Résidents satisfaits",
+      "requests": "Demandes traitées",
+      "uptime": "Disponibilité"
+    },
+    "cta": {
+      "title": "Prêt à simplifier la gestion ?",
+      "subtitle": "Rejoignez des centaines de syndics qui font confiance à Darency",
+      "button": "Essai gratuit de 14 jours"
+    },
+    "footer": {
+      "tagline": "La gestion de immeubles simplifiée au Maroc",
+      "product": "Produit",
+      "company": "Entreprise",
+      "legal": "Légal",
+      "contact": "Contact",
+      "privacy": "Politique de confidentialité",
+      "terms": "Conditions d'utilisation",
+      "copyright": "© 2024 Darency. Tous droits réservés."
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Connexion",
+      "subtitle": "Accédez à votre compte Darency",
+      "emailPlaceholder": "Votre adresse email",
+      "passwordPlaceholder": "Votre mot de passe",
+      "rememberMe": "Se souvenir de moi",
+      "forgotPassword": "Mot de passe oublié ?",
+      "submit": "Se connecter",
+      "noAccount": "Pas encore de compte ?",
+      "signUp": "Créer un compte",
+      "errors": {
+        "invalidEmail": "Adresse email invalide",
+        "invalidPassword": "Le mot de passe doit contenir au moins 8 caractères",
+        "invalidCredentials": "Email ou mot de passe incorrect"
+      }
+    }
+  },
+  "dashboard": {
+    "welcome": "Bienvenue",
+    "overview": "Vue d'ensemble",
+    "recentActivity": "Activité récente",
+    "quickActions": "Actions rapides",
+    "viewAll": "Voir tout",
+    "stats": {
+      "buildings": "Immeubles",
+      "residents": "Résidents",
+      "pendingRequests": "Demandes en attente",
+      "monthlyRevenue": "Revenus du mois"
+    },
+    "charts": {
+      "expensesTitle": "Dépenses du mois",
+      "requestsTitle": "Demandes par statut"
+    },
+    "recentRequests": {
+      "title": "Demandes récentes",
+      "viewAll": "Voir toutes les demandes"
+    },
+    "upcomingPayments": {
+      "title": "Paiements à venir"
+    }
+  },
+  "buildings": {
+    "title": "Immeubles",
+    "add": "Ajouter un immeuble",
+    "list": {
+      "name": "Nom",
+      "address": "Adresse",
+      "residents": "Résidents",
+      "actions": "Actions"
+    },
+    "form": {
+      "name": "Nom de l'immeuble",
+      "address": "Adresse",
+      "city": "Ville",
+      "postalCode": "Code postal",
+      "description": "Description"
+    }
+  },
+  "residents": {
+    "title": "Résidents",
+    "add": "Ajouter un résident",
+    "list": {
+      "name": "Nom",
+      "apartment": "Appartement",
+      "email": "Email",
+      "phone": "Téléphone",
+      "role": "Rôle",
+      "actions": "Actions"
+    },
+    "roles": {
+      "owner": "Propriétaire",
+      "resident": "Résident",
+      "manager": "Syndic"
+    }
+  },
+  "finances": {
+    "title": "Finances",
+    "expenses": "Dépenses",
+    "income": "Recettes",
+    "balance": "Solde",
+    "addExpense": "Ajouter une dépense",
+    "addIncome": "Ajouter une recette",
+    "table": {
+      "date": "Date",
+      "description": "Description",
+      "category": "Catégorie",
+      "amount": "Montant"
+    }
+  },
+  "requests": {
+    "title": "Demandes de maintenance",
+    "add": "Nouvelle demande",
+    "status": {
+      "pending": "En attente",
+      "in_progress": "En cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé"
+    },
+    "priority": {
+      "low": "Basse",
+      "medium": "Moyenne",
+      "high": "Haute",
+      "urgent": "Urgente"
+    },
+    "table": {
+      "title": "Titre",
+      "description": "Description",
+      "status": "Statut",
+      "priority": "Priorité",
+      "date": "Date"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "profile": "Profil",
+    "notifications": "Notifications",
+    "language": "Langue",
+    "security": "Sécurité"
+  }
+}

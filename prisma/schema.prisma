@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  RESIDENT
+  OWNER
+}
+
+enum RequestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(RESIDENT)
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  buildings       Building[]
+  resident        Resident[]
+  maintenanceRequests MaintenanceRequest[]
+}
+
+model Building {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  city        String
+  postalCode  String?
+  description String?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  managerId        String
+  manager           User             @relation(fields: [managerId], references: [id])
+  residents         Resident[]
+  expenses          Expense[]
+  maintenanceRequests MaintenanceRequest[]
+}
+
+model Resident {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String?
+  apartment   String
+  floor       Int?
+  role        Role     @default(RESIDENT)
+  isOwner     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  buildingId    String
+  building      Building        @relation(fields: [buildingId], references: [id])
+  userId        String?
+  user          User?           @relation(fields: [userId], references: [id])
+  payments      Payment[]
+  maintenanceRequests MaintenanceRequest[]
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  description String
+  amount      Float
+  category    String
+  date        DateTime
+  receiptUrl  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  buildingId String
+  building   Building @relation(fields: [buildingId], references: [id])
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  amount    Float
+  month     Int
+  year      Int
+  status    PaymentStatus @default(PENDING)
+  dueDate   DateTime
+  paidDate  DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+}
+
+model MaintenanceRequest {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  status      RequestStatus @default(PENDING)
+  priority    Priority      @default(MEDIUM)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  resolvedAt  DateTime?
+
+  buildingId  String
+  building    Building  @relation(fields: [buildingId], references: [id])
+  residentId  String
+  resident    Resident  @relation(fields: [residentId], references: [id])
+  reportedById String
+  reportedBy  User       @relation(fields: [reportedById], references: [id])
+}
