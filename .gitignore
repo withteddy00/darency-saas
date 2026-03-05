@@ -39,6 +39,7 @@ next-env.d.ts
 
 # Prisma
 prisma/migrations/
+*.db
 
 # OS
 Thumbs.db

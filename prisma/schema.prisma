@@ -3,43 +3,48 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  MANAGER
-  RESIDENT
-  OWNER
-}
+// For PostgreSQL production, change provider to "postgresql" and set:
+// DATABASE_URL="postgresql://user:password@localhost:5432/darency"
+// Then uncomment the enum definitions below
 
-enum RequestStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
+// PostgreSQL enums (use String for SQLite)
+// enum Role {
+//   ADMIN
+//   MANAGER
+//   RESIDENT
+//   OWNER
+// }
 
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
-}
+// enum RequestStatus {
+//   PENDING
+//   IN_PROGRESS
+//   COMPLETED
+//   CANCELLED
+// }
 
-enum PaymentStatus {
-  PENDING
-  PAID
-  OVERDUE
-}
+// enum Priority {
+//   LOW
+//   MEDIUM
+//   HIGH
+//   URGENT
+// }
+
+// enum PaymentStatus {
+//   PENDING
+//   PAID
+//   OVERDUE
+// }
 
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
   name      String
-  role      Role     @default(RESIDENT)
+  role      String   @default("RESIDENT")
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -74,7 +79,7 @@ model Resident {
   phone       String?
   apartment   String
   floor       Int?
-  role        Role     @default(RESIDENT)
+  role        String   @default("RESIDENT")
   isOwner     Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -102,28 +107,28 @@ model Expense {
 }
 
 model Payment {
-  id        String        @id @default(cuid())
+  id        String   @id @default(cuid())
   amount    Float
   month     Int
   year      Int
-  status    PaymentStatus @default(PENDING)
+  status    String   @default("PENDING")
   dueDate   DateTime
   paidDate  DateTime?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   residentId String
   resident   Resident @relation(fields: [residentId], references: [id])
 }
 
 model MaintenanceRequest {
-  id          String        @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
   description String
-  status      RequestStatus @default(PENDING)
-  priority    Priority      @default(MEDIUM)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  status      String   @default("PENDING")
+  priority    String   @default("MEDIUM")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   resolvedAt  DateTime?
 
   buildingId  String
