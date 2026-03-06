@@ -46,14 +46,14 @@ const ownerNavItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
-  { href: '/dashboard/residents', label: 'Residents', icon: Users },
-  { href: '/dashboard/buildings', label: 'Apartments', icon: Building2 },
-  { href: '/dashboard/charges', label: 'Charges', icon: Receipt },
-  { href: '/dashboard/payments', label: 'Payments', icon: CreditCard },
-  { href: '/dashboard/requests', label: 'Maintenance', icon: Wrench },
-  { href: '/dashboard/announcements', label: 'Announcements', icon: Bell },
-  { href: '/dashboard/documents', label: 'Documents', icon: FileText },
-  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+  { href: '/admin/residents', label: 'Residents', icon: Users },
+  { href: '/admin/apartments', label: 'Apartments', icon: Building2 },
+  { href: '/admin/charges', label: 'Charges', icon: Receipt },
+  { href: '/admin/payments', label: 'Payments', icon: CreditCard },
+  { href: '/admin/requests', label: 'Maintenance', icon: Wrench },
+  { href: '/admin/announcements', label: 'Announcements', icon: Bell },
+  { href: '/admin/documents', label: 'Documents', icon: FileText },
+  { href: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
 const residentNavItems: NavItem[] = [
