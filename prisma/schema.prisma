@@ -38,6 +38,14 @@ model Residence {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Additional fields
+  numberOfBuildings    Int?    // Number of buildings in the residence
+  numberOfApartments  Int?    // Total number of apartments
+  contactPhone        String? // Contact phone for the residence
+  email              String? // Contact email for the residence
+  notes              String? // Additional notes
+  status             String  @default("ACTIVE") // ACTIVE, INACTIVE, MAINTENANCE
+
   // Tenant relation
   organizationId String
   organization  Organization @relation(fields: [organizationId], references: [id])
