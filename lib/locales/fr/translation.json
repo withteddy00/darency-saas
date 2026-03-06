@@ -28,6 +28,7 @@
     "amount": "Montant",
     "description": "Description",
     "email": "Email",
+    "password": "Mot de passe",
     "phone": "Téléphone",
     "address": "Adresse",
     "name": "Nom",
