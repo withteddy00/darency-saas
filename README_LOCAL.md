@@ -73,11 +73,56 @@ The app will be available at http://localhost:3000
 
 After seeding the database, you can log in with these accounts:
 
-| Role | Email | Password | Redirects to |
-|------|-------|----------|-------------|
-| **OWNER** | owner@darency.ma | Owner123! | /owner |
-| **ADMIN** | admin@darency.ma | Admin123! | /admin |
-| **RESIDENT** | resident@darency.ma | Resident123! | /resident |
+| Role | Email | Password | Scope | Redirects to |
+|------|-------|----------|-------|-------------|
+| **OWNER** | owner@darency.ma | Owner123! | Global (all residences) | /owner |
+| **ADMIN** | admin@darency.ma | Admin123! | Single residence | /admin |
+| **ADMIN 2** | admin-rabat@darency.ma | Admin123! | Single residence | /admin |
+| **RESIDENT** | resident@darency.ma | Resident123! | Own apartment | /resident |
+
+### Role Scoping Rules
+
+Darency enforces strict role-based access control:
+
+#### OWNER (Global Super Admin)
+- **Scope**: Organization/Platform level
+- **Permissions**:
+  - Can view and manage ALL residences
+  - Can create, edit, and delete residences
+  - Can create and manage ADMIN users
+  - Can assign ADMIN to a specific residence
+  - Has access to global statistics and platform settings
+- **Residence Assignment**: NOT tied to any single residence (global access)
+
+#### ADMIN (Syndic/Manager)
+- **Scope**: Exactly ONE residence
+- **Permissions**:
+  - Can only manage their assigned residence
+  - Can manage apartments, residents, charges, payments, maintenance requests
+  - Can create announcements and documents for their residence
+- **Residence Assignment**: MUST be assigned to exactly one residence via `adminForResidenceId`
+- **Restrictions**: Cannot access other residences or global owner pages
+
+#### RESIDENT
+- **Scope**: Own apartment
+- **Permissions**:
+  - Can view their own charges and payments
+  - Can submit maintenance requests
+  - Can view announcements and documents for their residence
+- **Residence Assignment**: Linked to one apartment via `apartmentId`
+
+### API Access Control
+
+All API endpoints enforce role scoping:
+- `GET /api/charges`: OWNER sees all, ADMIN sees only their residence
+- `POST /api/charges`: ADMIN must have assigned residence
+- `GET /api/residents`: OWNER sees all, ADMIN sees only their residence
+- `POST /api/residents`: ADMIN must have assigned residence
+
+If an ADMIN attempts to access endpoints without an assigned residence, they receive:
+```
+403 Forbidden: "Admin residence not assigned. Please contact the owner."
+```
 
 ## Available Scripts
 

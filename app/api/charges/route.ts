@@ -13,6 +13,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // ADMIN must have an assigned residence to access this endpoint
+    if (session.user.role === 'ADMIN' && !session.user.residenceId) {
+      return NextResponse.json({ error: 'Admin residence not assigned. Please contact the owner.' }, { status: 403 })
+    }
+
     // OWNER sees all residences - no residence filter
     // ADMIN sees only their assigned residence
     let residenceFilter = {}
@@ -72,17 +77,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // ADMIN must have an assigned residence to perform this action
+    const adminResidenceId = session.user.residenceId
+
+    if (!adminResidenceId) {
+      return NextResponse.json({ error: 'Admin residence not assigned. Please contact the owner.' }, { status: 403 })
+    }
+
     const body = await request.json()
     const { title, category, amount, month, year, apartmentId, description } = body
 
     if (!title || !amount || !month || !year || !apartmentId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
-
-    const adminResidenceId = session.user.residenceId
-
-    if (!adminResidenceId) {
-      return NextResponse.json({ error: 'Residence not found' }, { status: 400 })
     }
 
     // Verify the apartment belongs to this admin's residence

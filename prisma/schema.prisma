@@ -54,6 +54,11 @@ model Residence {
 }
 
 // User (can be OWNER, ADMIN, or RESIDENT linked to Apartment)
+// 
+// Role Scoping Rules:
+// - OWNER: Global platform admin - NOT tied to any residence, can see ALL residences
+// - ADMIN: Syndic/Manager - MUST be linked to exactly ONE residence via adminForResidenceId
+// - RESIDENT: Apartment resident - linked to exactly ONE apartment via apartmentId
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -69,8 +74,10 @@ model User {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  // For ADMIN role - optionally linked to a Residence
-  adminForResidenceId String?
+  // For ADMIN role - REQUIRED: must be linked to exactly ONE Residence
+  // This enforces that ADMIN cannot exist without an assigned residence
+  // and cannot manage multiple residences
+  adminForResidenceId String? 
   adminForResidence   Residence? @relation("AdminResidence", fields: [adminForResidenceId], references: [id])
 
   // For RESIDENT role - linked to an Apartment (unique for one-to-one)
