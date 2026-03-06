@@ -1,40 +1,120 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/hooks/use-translations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-
-const requests = [
-  { id: 1, title: 'Fuite d\'eau dans l\'appartement B4', description: 'Fuite importante au niveau du robinet de l\'évier', status: 'pending', priority: 'high', building: 'Résidence Al-Manar', apartment: 'B4', date: '2026-03-04' },
-  { id: 2, title: 'Panne d\'ascenseur', description: 'L\'ascenseur est bloqué au 5ème étage', status: 'in_progress', priority: 'urgent', building: 'Résidence Assa', apartment: 'Hall', date: '2026-03-03' },
-  { id: 3, title: 'Réparation éclairage hall', description: 'Lumière du hall d\'entrée défectueuse', status: 'completed', priority: 'low', building: 'Résidence Oasis', apartment: 'Hall', date: '2026-03-01' },
-  { id: 4, title: 'Maintenance climatisation', description: 'La climatisation ne fonctionne pas correctement', status: 'pending', priority: 'medium', building: 'Résidence Al-Manar', apartment: 'A8', date: '2026-03-02' },
-  { id: 5, title: 'Porte de garage cassée', description: 'La porte de garage ne se ferme plus', status: 'pending', priority: 'high', building: 'Résidence Les Palmes', apartment: 'Garage', date: '2026-03-04' },
-]
+import { Plus as PlusIconLucide, AlertCircle } from 'lucide-react'
 
 export default function RequestsPage({ params }: { params: { locale: string } }) {
   const { locale } = params
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const t = useTranslations(locale)
+  
+  const [requests, setRequests] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push(`/${locale}/login`)
+    } else if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
+      router.push(`/${locale}/owner`)
+    }
+  }, [status, session, router, locale])
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
+      fetchRequests()
+    }
+  }, [status, session])
+
+  const fetchRequests = async () => {
+    try {
+      const response = await fetch('/api/admin/maintenance')
+      if (response.ok) {
+        const data = await response.json()
+        setRequests(data)
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to fetch requests')
+      }
+    } catch (err) {
+      setError('Failed to fetch requests')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'badge-warning'
-      case 'in_progress': return 'badge-info'
-      case 'completed': return 'badge-success'
-      case 'cancelled': return 'badge-error'
+      case 'PENDING': return 'badge-warning'
+      case 'IN_PROGRESS': return 'badge-info'
+      case 'COMPLETED': return 'badge-success'
+      case 'CANCELLED': return 'badge-error'
       default: return 'badge-info'
     }
   }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'text-error'
-      case 'high': return 'text-warning'
-      case 'medium': return 'text-info'
-      case 'low': return 'text-text-tertiary'
+      case 'URGENT': return 'text-error'
+      case 'HIGH': return 'text-warning'
+      case 'MEDIUM': return 'text-info'
+      case 'LOW': return 'text-text-tertiary'
       default: return 'text-text-secondary'
     }
   }
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'PENDING': return t('requests.status.pending') || 'En attente'
+      case 'IN_PROGRESS': return t('requests.status.inProgress') || 'En cours'
+      case 'COMPLETED': return t('requests.status.completed') || 'Terminé'
+      case 'CANCELLED': return t('requests.status.cancelled') || 'Annulé'
+      default: return status
+    }
+  }
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'URGENT': return t('requests.priority.urgent') || 'Urgent'
+      case 'HIGH': return t('requests.priority.high') || 'Élevé'
+      case 'MEDIUM': return t('requests.priority.medium') || 'Moyen'
+      case 'LOW': return t('requests.priority.low') || 'Faible'
+      default: return priority
+    }
+  }
+
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-error mx-auto mb-4" />
+          <p className="text-error">{error}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!session || session.user.role !== 'ADMIN') {
+    return null
+  }
+
+  const pendingCount = requests.filter(r => r.status === 'PENDING').length
+  const inProgressCount = requests.filter(r => r.status === 'IN_PROGRESS').length
+  const completedCount = requests.filter(r => r.status === 'COMPLETED').length
 
   return (
     <div>
@@ -43,10 +123,49 @@ export default function RequestsPage({ params }: { params: { locale: string } })
           <h1 className="page-title">{t('requests.title')}</h1>
           <p className="page-subtitle">{t('dashboard.stats.pendingRequests')}</p>
         </div>
-        <Button>
-          <PlusIcon className="w-4 h-4 mr-2" />
-          {t('requests.add')}
-        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-warning/10 rounded-lg">
+                <AlertCircle className="w-6 h-6 text-warning" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{pendingCount}</p>
+                <p className="text-sm text-text-secondary">{t('requests.status.pending') || 'En attente'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-info/10 rounded-lg">
+                <AlertCircle className="w-6 h-6 text-info" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{inProgressCount}</p>
+                <p className="text-sm text-text-secondary">{t('requests.status.inProgress') || 'En cours'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-success/10 rounded-lg">
+                <AlertCircle className="w-6 h-6 text-success" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{completedCount}</p>
+                <p className="text-sm text-text-secondary">{t('requests.status.completed') || 'Terminé'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -72,18 +191,23 @@ export default function RequestsPage({ params }: { params: { locale: string } })
                         <p className="text-sm text-text-tertiary">{request.description}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-text-secondary">{request.building} - {request.apartment}</td>
+                    <td className="px-6 py-4 text-text-secondary">
+                      {request.apartment?.building && <span>Bâtiment {request.apartment.building} - </span>}
+                      {request.apartment?.number}
+                    </td>
                     <td className="px-6 py-4">
                       <span className={getPriorityColor(request.priority)}>
-                        {t(`requests.priority.${request.priority}`)}
+                        {getPriorityLabel(request.priority)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={getStatusColor(request.status)}>
-                        {t(`requests.status.${request.status}`)}
+                        {getStatusLabel(request.status)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-text-secondary">{new Date(request.date).toLocaleDateString('fr-MA')}</td>
+                    <td className="px-6 py-4 text-text-secondary">
+                      {request.createdAt ? new Date(request.createdAt).toLocaleDateString('fr-MA') : '-'}
+                    </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button className="p-2 hover:bg-surface-elevated rounded-lg transition-colors">
@@ -102,14 +226,6 @@ export default function RequestsPage({ params }: { params: { locale: string } })
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-    </svg>
   )
 }
 
