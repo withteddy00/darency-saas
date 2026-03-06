@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { 
   Building2, 
@@ -25,6 +25,9 @@ export default function AdminDashboard({ params }: { params: { locale: string } 
   const { data: session, status } = useSession()
   const router = useRouter()
   const { locale } = params
+  
+  const [dashboardData, setDashboardData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -37,6 +40,26 @@ export default function AdminDashboard({ params }: { params: { locale: string } 
       }
     }
   }, [status, session, router, locale])
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
+      fetchDashboard()
+    }
+  }, [status, session])
+
+  const fetchDashboard = async () => {
+    try {
+      const response = await fetch('/api/admin/dashboard')
+      if (response.ok) {
+        const data = await response.json()
+        setDashboardData(data)
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (status === 'loading') {
     return (
@@ -101,32 +124,65 @@ export default function AdminDashboard({ params }: { params: { locale: string } 
 
   const translations = t[locale as 'fr' | 'ar'] || t.fr
 
-  // Mock data for demonstration
-  const stats = [
-    { title: translations.apartments, value: '12', change: '100% occupés', changeType: 'positive' as const, icon: Building2, iconColor: 'text-primary' },
-    { title: translations.residents, value: '28', change: '+5 ce mois', changeType: 'positive' as const, icon: Users, iconColor: 'text-secondary' },
-    { title: translations.unpaidCharges, value: formatCurrency(4500), change: '3 en retard', changeType: 'negative' as const, icon: CreditCard, iconColor: 'text-warning' },
-    { title: translations.pendingRequests, value: '5', change: '2 urgentes', changeType: 'negative' as const, icon: Wrench, iconColor: 'text-error' },
+  if (loading || !dashboardData) {
+    return (
+      <DashboardLayout locale={locale} role="ADMIN">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (!session || session.user.role !== 'ADMIN') {
+    return null
+  }
+
+  const { residence, stats, recentPayments, recentMaintenanceRequests } = dashboardData
+
+  const statCards = [
+    { title: translations.apartments, value: stats.totalApartments.toString(), change: `${stats.occupancyRate}% occupés`, changeType: 'positive' as const, icon: Building2, iconColor: 'text-primary' },
+    { title: translations.residents, value: stats.residentsCount.toString(), change: `${stats.occupiedApartments} occupés`, changeType: 'positive' as const, icon: Users, iconColor: 'text-secondary' },
+    { title: translations.unpaidCharges, value: formatCurrency(stats.unpaidAmount), change: `${stats.unpaidCount} en attente`, changeType: 'negative' as const, icon: CreditCard, iconColor: 'text-warning' },
+    { title: translations.pendingRequests, value: stats.openRequests.toString(), change: `${stats.inProgressRequests} en cours`, changeType: 'negative' as const, icon: Wrench, iconColor: 'text-error' },
   ]
 
-  const recentActivity = [
-    { id: '1', title: 'Paiement validé', description: '2 500 DH - Appartement 204', time: 'Il y a 1h', icon: CreditCard, iconColor: 'text-success' },
-    { id: '2', title: 'Nouveau résident', description: 'Youssef Amrani - Appartement 108', time: 'Il y a 3h', icon: Users, iconColor: 'text-primary' },
-    { id: '3', title: 'Demande de maintenance', description: 'Fuite d\'eau - Appartement 305', time: 'Il y a 5h', icon: Wrench, iconColor: 'text-warning' },
-    { id: '4', title: 'Charge mensuelle créée', description: 'Février 2026', time: 'Hier', icon: FileText, iconColor: 'text-secondary' },
-  ]
+  const activityItems: any[] = [
+    ...(recentPayments || []).map((p: any) => ({
+      id: p.id,
+      title: 'Paiement validé',
+      description: `${formatCurrency(p.amount)} - Appartement ${p.apartment}`,
+      time: p.paidDate ? `Le ${new Date(p.paidDate).toLocaleDateString('fr-MA')}` : 'Récent',
+      icon: CreditCard,
+      iconColor: 'text-success'
+    })),
+    ...(recentMaintenanceRequests || []).map((m: any) => ({
+      id: m.id,
+      title: m.title,
+      description: `Appartement ${m.apartment}`,
+      time: new Date(m.createdAt).toLocaleDateString('fr-MA'),
+      icon: Wrench,
+      iconColor: 'text-warning'
+    }))
+  ].slice(0, 5)
 
-  const pendingPayments = [
-    { id: '1', resident: 'Ahmed Benali', apartment: 'Appartement 102', amount: 2500, dueDate: '15/02/2026', status: 'overdue' as const },
-    { id: '2', resident: 'Fatima Zahra', apartment: 'Appartement 205', amount: 1800, dueDate: '20/02/2026', status: 'pending' as const },
-    { id: '3', resident: 'Mohamed El Amrani', apartment: 'Appartement 301', amount: 3200, dueDate: '25/02/2026', status: 'pending' as const },
-  ]
+  const pendingPaymentsList = (recentPayments || []).slice(0, 3).map((p: any) => ({
+    id: p.id,
+    resident: 'Résident',
+    apartment: `Appartement ${p.apartment}`,
+    amount: p.amount,
+    dueDate: new Date().toLocaleDateString('fr-MA'),
+    status: 'pending' as const
+  }))
 
-  const maintenanceBoard = [
-    { id: '1', title: 'Fuite d\'eau dans la cuisine', apartment: 'Appartement 305', priority: 'high' as const, status: 'in_progress', date: 'Il y a 2h' },
-    { id: '2', title: 'Climatisation ne fonctionne pas', apartment: 'Appartement 108', priority: 'medium' as const, status: 'pending', date: 'Hier' },
-    { id: '3', title: 'Porte de garage cassée', apartment: 'Résidence', priority: 'high' as const, status: 'pending', date: 'Il y a 2 jours' },
-  ]
+  const maintenanceItems = (recentMaintenanceRequests || []).slice(0, 3).map((m: any) => ({
+    id: m.id,
+    title: m.title,
+    apartment: `Appartement ${m.apartment}`,
+    priority: (m.priority || 'LOW').toLowerCase() as 'high' | 'medium' | 'low',
+    status: (m.status || 'PENDING').toLowerCase().replace('_', '') as 'pending' | 'in_progress' | 'completed',
+    date: new Date(m.createdAt).toLocaleDateString('fr-MA')
+  }))
 
   return (
     <DashboardLayout locale={locale} role="ADMIN">
@@ -137,18 +193,18 @@ export default function AdminDashboard({ params }: { params: { locale: string } 
             <h1 className="text-2xl font-bold text-text-primary">
               {translations.welcome}, {session.user.name} 👋
             </h1>
-            <p className="text-text-secondary mt-1">{translations.overview}</p>
+            <p className="text-text-secondary mt-1">{residence?.name || translations.overview}</p>
           </div>
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 bg-secondary/10 text-secondary text-sm font-medium rounded-full">
-              ADMINISTRATEUR
+              {residence?.city || 'ADMINISTRATEUR'}
             </span>
           </div>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat, index) => (
+          {statCards.map((stat, index) => (
             <StatCard key={index} {...stat} />
           ))}
         </div>
@@ -160,12 +216,12 @@ export default function AdminDashboard({ params }: { params: { locale: string } 
             <SectionCard 
               title={translations.recentActivity}
               action={
-                <Link href={`/${locale}/dashboard/requests`} className="text-sm text-primary hover:underline flex items-center gap-1">
+                <Link href={`/${locale}/admin/requests`} className="text-sm text-primary hover:underline flex items-center gap-1">
                   {translations.viewAll} <ArrowRight className="w-4 h-4" />
                 </Link>
               }
             >
-              <ActivityList items={recentActivity} />
+              <ActivityList items={activityItems} />
             </SectionCard>
           </div>
 
@@ -174,13 +230,13 @@ export default function AdminDashboard({ params }: { params: { locale: string } 
             <SectionCard 
               title={translations.pendingPayments}
               action={
-                <Link href={`/${locale}/dashboard/finances`} className="text-sm text-primary hover:underline flex items-center gap-1">
+                <Link href={`/${locale}/admin/payments`} className="text-sm text-primary hover:underline flex items-center gap-1">
                   {translations.viewAll} <ArrowRight className="w-4 h-4" />
                 </Link>
               }
             >
               <div className="space-y-3">
-                {pendingPayments.map((payment) => (
+                {pendingPaymentsList.map((payment: any) => (
                   <div key={payment.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-elevated transition-colors">
                     <div>
                       <p className="font-medium text-text-primary">{payment.resident}</p>
@@ -188,8 +244,8 @@ export default function AdminDashboard({ params }: { params: { locale: string } 
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-text-primary">{formatCurrency(payment.amount)}</p>
-                      <p className={`text-xs ${payment.status === 'overdue' ? 'text-error' : 'text-warning'}`}>
-                        {payment.status === 'overdue' ? 'En retard' : 'En attente'}
+                      <p className="text-xs text-warning">
+                        En attente
                       </p>
                     </div>
                   </div>
@@ -204,13 +260,13 @@ export default function AdminDashboard({ params }: { params: { locale: string } 
           <SectionCard 
             title={translations.maintenanceBoard}
             action={
-              <Link href={`/${locale}/dashboard/requests`} className="text-sm text-primary hover:underline flex items-center gap-1">
+              <Link href={`/${locale}/admin/requests`} className="text-sm text-primary hover:underline flex items-center gap-1">
                 {translations.viewAll} <ArrowRight className="w-4 h-4" />
               </Link>
             }
           >
             <div className="space-y-4">
-              {maintenanceBoard.map((item) => (
+              {maintenanceItems.map((item: any) => (
                 <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors">
                   <div className={`p-2 rounded-lg ${
                     item.priority === 'high' ? 'bg-error/10 text-error' :
