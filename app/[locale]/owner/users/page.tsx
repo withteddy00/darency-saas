@@ -1,27 +1,55 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-
-// Mock data for users
-const mockUsers = [
-  { id: '1', name: 'Mohamed Owner', email: 'owner@darency.ma', role: 'OWNER', status: 'active' },
-  { id: '2', name: 'Fatima Admin', email: 'admin@darency.ma', role: 'ADMIN', residence: 'Résidence Al-Manar', status: 'active' },
-  { id: '3', name: 'Ahmed Resident', email: 'resident@darency.ma', role: 'RESIDENT', apartment: 'A1', status: 'active' },
-]
 
 export default function OwnerUsersPage({ params }: { params: { locale: string } }) {
   const { locale } = params
   const { data: session, status } = useSession()
   const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [users, setUsers] = useState(mockUsers)
+  const [users, setUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/owner/users')
+      if (response.ok) {
+        const data = await response.json()
+        // Handle both array and object response shapes
+        const usersArray = Array.isArray(data) ? data : (data.users || [])
+        setUsers(usersArray)
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      setUsers([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push(`/${locale}/login`)
+    } else if (status === 'authenticated' && session?.user?.role !== 'OWNER') {
+      if (session?.user?.role === 'ADMIN') {
+        router.push(`/${locale}/admin`)
+      } else if (session?.user?.role === 'RESIDENT') {
+        router.push(`/${locale}/resident`)
+      }
+    }
+  }, [status, session, router, locale])
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'OWNER') {
+      fetchUsers()
+    }
+  }, [status, session])
 
   const translations = {
     fr: {
@@ -90,7 +118,7 @@ export default function OwnerUsersPage({ params }: { params: { locale: string } 
     }
   }, [status, session, router, locale])
 
-  if (status === 'loading') {
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -102,7 +130,7 @@ export default function OwnerUsersPage({ params }: { params: { locale: string } 
     return null
   }
 
-  const filteredUsers = filter === 'all' ? users : users.filter(u => u.role === filter)
+  const filteredUsers = Array.isArray(users) ? (filter === 'all' ? users : users.filter(u => u.role === filter)) : []
 
   const getRoleBadge = (role: string) => {
     switch (role) {

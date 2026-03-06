@@ -21,10 +21,13 @@ export default function OwnerResidencesPage({ params }: { params: { locale: stri
       const response = await fetch('/api/owner/residences')
       if (response.ok) {
         const data = await response.json()
-        setResidences(data)
+        // Handle both array and object response shapes
+        const residencesArray = Array.isArray(data) ? data : (data.residences || [])
+        setResidences(residencesArray)
       }
     } catch (error) {
       console.error('Error fetching residences:', error)
+      setResidences([])
     } finally {
       setLoading(false)
     }
