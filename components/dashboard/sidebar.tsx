@@ -12,7 +12,14 @@ import {
   Home,
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CreditCard,
+  Wrench,
+  Bell,
+  FileText,
+  Receipt,
+  DollarSign,
+  ClipboardList
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -40,16 +47,23 @@ const ownerNavItems: NavItem[] = [
 const adminNavItems: NavItem[] = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/dashboard/residents', label: 'Residents', icon: Users },
-  { href: '/dashboard/buildings', label: 'Buildings', icon: Building2 },
-  { href: '/dashboard/finances', label: 'Finances', icon: FileBarChart },
-  { href: '/dashboard/requests', label: 'Requests', icon: LayoutDashboard },
+  { href: '/dashboard/buildings', label: 'Apartments', icon: Building2 },
+  { href: '/dashboard/charges', label: 'Charges', icon: Receipt },
+  { href: '/dashboard/payments', label: 'Payments', icon: CreditCard },
+  { href: '/dashboard/requests', label: 'Maintenance', icon: Wrench },
+  { href: '/dashboard/announcements', label: 'Announcements', icon: Bell },
+  { href: '/dashboard/documents', label: 'Documents', icon: FileText },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]
 
 const residentNavItems: NavItem[] = [
   { href: '/resident', label: 'Overview', icon: LayoutDashboard },
-  { href: '/resident/payments', label: 'Payments', icon: FileBarChart },
-  { href: '/resident/requests', label: 'Requests', icon: LayoutDashboard },
+  { href: '/resident/charges', label: 'My Charges', icon: Receipt },
+  { href: '/resident/payments', label: 'My Payments', icon: CreditCard },
+  { href: '/resident/requests', label: 'Requests', icon: Wrench },
+  { href: '/resident/announcements', label: 'Announcements', icon: Bell },
+  { href: '/resident/documents', label: 'Documents', icon: FileText },
+  { href: '/resident/profile', label: 'Profile', icon: Users },
   { href: '/resident/settings', label: 'Settings', icon: Settings },
 ]
 
@@ -63,11 +77,43 @@ export function Sidebar({ locale, role, isCollapsed = false, onToggle }: Sidebar
   const translations = {
     fr: {
       dashboard: 'Tableau de bord',
-      signOut: 'Déconnexion'
+      signOut: 'Déconnexion',
+      Overview: 'Vue d\'ensemble',
+      Residences: 'Résidences',
+      Users: 'Utilisateurs',
+      Reports: 'Rapports',
+      Settings: 'Paramètres',
+      Residents: 'Résidents',
+      Apartments: 'Appartements',
+      Charges: 'Charges',
+      Payments: 'Paiements',
+      Maintenance: 'Maintenance',
+      Announcements: 'Annonces',
+      Documents: 'Documents',
+      'My Charges': 'Mes charges',
+      'My Payments': 'Mes paiements',
+      Requests: 'Demandes',
+      Profile: 'Profil',
     },
     ar: {
       dashboard: 'لوحة التحكم',
-      signOut: 'تسجيل الخروج'
+      signOut: 'تسجيل الخروج',
+      Overview: 'نظرة عامة',
+      Residences: 'العقارات',
+      Users: 'المستخدمون',
+      Reports: 'التقارير',
+      Settings: 'الإعدادات',
+      Residents: 'المقيمون',
+      Apartments: 'الشقق',
+      Charges: 'الرسوم',
+      Payments: 'المدفوعات',
+      Maintenance: 'الصيانة',
+      Announcements: 'الإعلانات',
+      Documents: 'المستندات',
+      'My Charges': 'رسومي',
+      'My Payments': 'مدفوعاتي',
+      Requests: 'الطلبات',
+      Profile: 'الملف الشخصي',
     }
   }
 
@@ -119,11 +165,11 @@ export function Sidebar({ locale, role, isCollapsed = false, onToggle }: Sidebar
                   : 'text-text-secondary hover:bg-surface-elevated hover:text-text-primary',
                 isCollapsed && 'justify-center'
               )}
-              title={isCollapsed ? item.label : undefined}
+              title={isCollapsed ? (t[item.label as keyof typeof t] || item.label) : undefined}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
               {!isCollapsed && (
-                <span className="font-medium text-sm">{item.label}</span>
+                <span className="font-medium text-sm">{t[item.label as keyof typeof t] || item.label}</span>
               )}
             </Link>
           )
