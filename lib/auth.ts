@@ -3,6 +3,9 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 
+// Debug logging in development
+const isDev = process.env.NODE_ENV === 'development'
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -13,6 +16,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          if (isDev) console.log('[auth] Missing email or password')
           throw new Error('Email and password are required')
         }
 
@@ -30,13 +34,19 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user) {
+          if (isDev) console.log('[auth] No user found with email:', credentials.email)
           throw new Error('No user found with this email')
         }
 
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
 
         if (!isPasswordValid) {
+          if (isDev) console.log('[auth] Invalid password for user:', credentials.email)
           throw new Error('Invalid password')
+        }
+
+        if (isDev) {
+          console.log('[auth] Login success:', { email: user.email, role: user.role })
         }
 
         return {
@@ -87,7 +97,20 @@ export const authOptions: NextAuthOptions = {
     error: '/fr/login'
   },
   session: {
-    strategy: 'jwt'
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  cookies: {
+    sessionToken: {
+      name: isDev ? 'next-auth.session-token' : '__Secure-next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: !isDev,
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+      },
+    },
   },
   secret: process.env.NEXTAUTH_SECRET || 'development-secret-change-in-production'
 }

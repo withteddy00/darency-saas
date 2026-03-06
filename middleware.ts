@@ -12,15 +12,37 @@ const roleRoutes: Record<string, string[]> = {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow static files, API routes, and auth pages
+  // Allow static files, API routes
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.includes('.') ||
-    pathname.startsWith('/favicon.ico') ||
-    pathname.includes('/login') ||
-    pathname === '/'
+    pathname.startsWith('/favicon.ico')
   ) {
+    return NextResponse.next()
+  }
+
+  // Handle root path - redirect to default locale
+  if (pathname === '/') {
+    return NextResponse.redirect(new URL('/fr', request.url))
+  }
+
+  // Allow login page without authentication
+  if (pathname.includes('/login')) {
+    // Check if user is already logged in
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    if (token) {
+      // User is already logged in, redirect to their dashboard
+      const locale = pathname.split('/')[1] || 'fr'
+      const role = token.role as string
+      const redirectMap: Record<string, string> = {
+        OWNER: `/${locale}/owner`,
+        ADMIN: `/${locale}/admin`,
+        RESIDENT: `/${locale}/resident`,
+      }
+      const redirectTo = redirectMap[role] || `/${locale}/dashboard`
+      return NextResponse.redirect(new URL(redirectTo, request.url))
+    }
     return NextResponse.next()
   }
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { useTranslations } from '@/hooks/use-translations'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
   const { locale } = params
   const t = useTranslations(locale)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -35,6 +36,19 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
     return Object.keys(newErrors).length === 0
   }
 
+  const getRoleBasePath = (role: string): string => {
+    switch (role) {
+      case 'OWNER':
+        return 'owner'
+      case 'ADMIN':
+        return 'admin'
+      case 'RESIDENT':
+        return 'resident'
+      default:
+        return 'dashboard'
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -51,11 +65,20 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
       })
 
       if (result?.error) {
-        setErrors({ general: result.error })
+        setErrors({ general: t('auth.login.errors.invalidCredentials') })
         setIsLoading(false)
-      } else {
-        // Redirect based on role - will be handled by the dashboard pages
-        router.push(`/${locale}/login?callbackUrl=/${locale}/dashboard`)
+      } else if (result?.ok) {
+        // Get session to determine role
+        const response = await fetch('/api/auth/session')
+        const session = await response.json()
+        
+        if (session?.user?.role) {
+          const roleBase = getRoleBasePath(session.user.role)
+          router.replace(`/${locale}/${roleBase}`)
+        } else {
+          // Fallback: try to redirect based on callbackUrl or default
+          router.replace(`/${locale}/dashboard`)
+        }
       }
     } catch (error) {
       setErrors({ general: 'An unexpected error occurred' })
