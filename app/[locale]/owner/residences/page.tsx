@@ -1,27 +1,52 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-
-// Mock data for residences
-const mockResidences = [
-  { id: '1', name: 'Résidence Al-Manar', address: '45 Boulevard Zerktouni, Casablanca', apartments: 3, residents: 3, status: 'active' },
-  { id: '2', name: 'Résidence Assa', address: '12 Avenue Hassan II, Rabat', apartments: 24, residents: 18, status: 'active' },
-  { id: '3', name: 'Résidence Oasis', address: '88 Rue Mohammed V, Marrakech', apartments: 36, residents: 28, status: 'active' },
-]
 
 export default function OwnerResidencesPage({ params }: { params: { locale: string } }) {
   const { locale } = params
   const { data: session, status } = useSession()
   const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [residences, setResidences] = useState(mockResidences)
+  const [residences, setResidences] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchResidences = async () => {
+    try {
+      const response = await fetch('/api/owner/residences')
+      if (response.ok) {
+        const data = await response.json()
+        setResidences(data)
+      }
+    } catch (error) {
+      console.error('Error fetching residences:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push(`/${locale}/login`)
+    } else if (status === 'authenticated' && session?.user?.role !== 'OWNER') {
+      if (session?.user?.role === 'ADMIN') {
+        router.push(`/${locale}/admin`)
+      } else if (session?.user?.role === 'RESIDENT') {
+        router.push(`/${locale}/resident`)
+      }
+    }
+  }, [status, session, router, locale])
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'OWNER') {
+      fetchResidences()
+    }
+  }, [status, session])
 
   const translations = {
     fr: {
@@ -68,19 +93,7 @@ export default function OwnerResidencesPage({ params }: { params: { locale: stri
 
   const t = translations[locale as 'fr' | 'ar'] || translations.fr
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push(`/${locale}/login`)
-    } else if (status === 'authenticated' && session?.user?.role !== 'OWNER') {
-      if (session?.user?.role === 'ADMIN') {
-        router.push(`/${locale}/admin`)
-      } else if (session?.user?.role === 'RESIDENT') {
-        router.push(`/${locale}/resident`)
-      }
-    }
-  }, [status, session, router, locale])
-
-  if (status === 'loading') {
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>

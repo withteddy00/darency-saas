@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { 
   Building2, 
@@ -22,6 +22,8 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
   const { data: session, status } = useSession()
   const router = useRouter()
   const { locale } = params
+  const [dashboardData, setDashboardData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -35,7 +37,27 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
     }
   }, [status, session, router, locale])
 
-  if (status === 'loading') {
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'OWNER') {
+      fetchDashboardData()
+    }
+  }, [status, session])
+
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch('/api/owner/dashboard')
+      if (response.ok) {
+        const data = await response.json()
+        setDashboardData(data)
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -102,26 +124,39 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
 
   const translations = t[locale as 'fr' | 'ar'] || t.fr
 
-  // Mock data for demonstration
-  const stats = [
-    { title: translations.totalResidences, value: '3', change: '+1 ce mois', changeType: 'positive' as const, icon: Building2, iconColor: 'text-primary' },
-    { title: translations.totalAdmins, value: '1', change: 'Actif', changeType: 'neutral' as const, icon: Users, iconColor: 'text-secondary' },
-    { title: translations.totalResidents, value: '12', change: '+3 ce mois', changeType: 'positive' as const, icon: Users, iconColor: 'text-accent' },
-    { title: translations.unpaidCharges, value: formatCurrency(4500), change: '2 en retard', changeType: 'negative' as const, icon: CreditCard, iconColor: 'text-warning' },
-  ]
+  // Use real data from API
+  const stats = dashboardData ? [
+    { title: translations.totalResidences, value: String(dashboardData.stats.totalResidences), change: '', changeType: 'neutral' as const, icon: Building2, iconColor: 'text-primary' },
+    { title: translations.totalAdmins, value: String(dashboardData.stats.totalAdmins), change: '', changeType: 'neutral' as const, icon: Users, iconColor: 'text-secondary' },
+    { title: translations.totalResidents, value: String(dashboardData.stats.totalResidents), change: '', changeType: 'neutral' as const, icon: Users, iconColor: 'text-accent' },
+    { title: translations.unpaidCharges, value: formatCurrency(dashboardData.stats.unpaidCharges), change: `${dashboardData.stats.openMaintenanceRequests} en attente`, changeType: 'negative' as const, icon: CreditCard, iconColor: 'text-warning' },
+  ] : []
 
-  const recentActivity = [
-    { id: '1', title: 'Nouveau résident enregistré', description: 'Ahmed Benali - Résidence Al-Manar', time: 'Il y a 2h', icon: Users, iconColor: 'text-success' },
-    { id: '2', title: 'Paiement reçu', description: '2 500 DH - Mohamed Khatri', time: 'Il y a 5h', icon: CreditCard, iconColor: 'text-primary' },
-    { id: '3', title: 'Demande de maintenance', description: 'Fuite d\'eau - Appartement 204', time: 'Hier', icon: Wrench, iconColor: 'text-warning' },
-    { id: '4', title: 'Rapport mensuel généré', description: 'Janvier 2026', time: 'Il y a 2 jours', icon: TrendingUp, iconColor: 'text-secondary' },
-  ]
+  const recentActivity = dashboardData ? [
+    ...dashboardData.recentPayments.slice(0, 3).map((p: any) => ({
+      id: p.id,
+      title: 'Paiement reçu',
+      description: `${formatCurrency(p.amount)} - Appartement ${p.apartment}`,
+      time: p.paidDate ? new Date(p.paidDate).toLocaleDateString('fr-FR') : '',
+      icon: CreditCard,
+      iconColor: 'text-primary'
+    })),
+    ...dashboardData.recentMaintenanceRequests.slice(0, 2).map((m: any) => ({
+      id: m.id,
+      title: m.title,
+      description: `Appartement ${m.apartment} - ${m.status}`,
+      time: new Date(m.createdAt).toLocaleDateString('fr-FR'),
+      icon: Wrench,
+      iconColor: 'text-warning'
+    }))
+  ] : []
 
-  const topResidences = [
-    { name: 'Résidence Al-Manar', units: 12, occupancy: 92, revenue: 15000 },
-    { name: 'Résidence Les Oliviers', units: 8, occupancy: 100, revenue: 12000 },
-    { name: 'Résidence Marina', units: 6, occupancy: 83, revenue: 9000 },
-  ]
+  const topResidences = dashboardData ? dashboardData.topResidences.map((r: any) => ({
+    name: r.name,
+    units: r.units,
+    occupancy: r.occupancy,
+    revenue: r.revenue
+  })) : []
 
   const pendingTasks = [
     { id: '1', title: 'Valider le paiement de 2 500 DH', type: 'payment', priority: 'high' as const },
@@ -211,7 +246,7 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
             }
           >
             <div className="space-y-4">
-              {topResidences.map((residence, index) => (
+              {topResidences.map((residence: any, index: number) => (
                 <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-elevated transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
