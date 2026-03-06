@@ -4,9 +4,7 @@ import React, { useState, useEffect, createContext, useContext } from 'react'
 import frTranslations from '@/lib/locales/fr/translation.json'
 import arTranslations from '@/lib/locales/ar/translation.json'
 
-type Translations = typeof frTranslations
-
-const translations: Record<string, Translations> = {
+const translations: Record<string, any> = {
   fr: frTranslations,
   ar: arTranslations,
 }

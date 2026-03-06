@@ -32,7 +32,11 @@
     "phone": "الهاتف",
     "address": "العنوان",
     "name": "الاسم",
-    "city": "المدينة"
+    "city": "المدينة",
+    "type": "النوع",
+    "floor": "الطابق",
+    "area": "المساحة",
+    "bedrooms": "غرف النوم"
   },
   "nav": {
     "home": "الرئيسية",
@@ -43,184 +47,26 @@
     "requests": "الطلبات",
     "settings": "الإعدادات",
     "logout": "تسجيل الخروج",
-    "profile": "الملف الشخصي"
+    "profile": "الملف الشخصي",
+    "users": "المستخدمون",
+    "residences": "الإقامة",
+    "reports": "التقارير"
   },
   "landing": {
-    "hero": {
-      "title": "إدارة مبانيك بسهولة تامة",
-      "subtitle": "دارينسي هي منصة إدارة العقارات الأكثر شمولاً في المغرب. قم بمزامنة المدفوعات وطلبات الصيانة والتواصل مع المقيمين.",
-      "cta": "ابدأ مجاناً",
-      "ctaSecondary": "شاهد العرض التوضيحي"
-    },
-    "features": {
-      "title": "كل ما تحتاجه",
-      "subtitle": "حل شامل لإدارة مبانيك",
-      "buildings": {
-        "title": "إدارة المباني",
-        "description": "إدارة 여러 مبانٍ وعناوينها ومعلوماتها التفصيلية."
-      },
-      "residents": {
-        "title": "دليل المقيمين",
-        "description": "تتبع جميع المقيمين والمالكين وجهات الاتصال."
-      },
-      "finances": {
-        "title": "المتابعة المالية",
-        "description": "تتبع المصروفات والمدفوعات وإنشاء التقارير المالية."
-      },
-      "maintenance": {
-        "title": "طلبات الصيانة",
-        "description": "تلقي وإدارة طلبات الصيانة من المقيمين."
-      },
-      "communication": {
-        "title": "التواصل",
-        "description": "إرسال الإشعارات والتواصل مع المقيمين."
-      },
-      "reports": {
-        "title": "التقارير والتحليلات",
-        "description": "لوحات معلومات مفصلة لاتخاذ قرارات مدروسة."
-      }
-    },
-    "stats": {
-      "title": "أرقام تتحدث عن نفسها",
-      "buildings": "مبانٍ مُدارة",
-      "residents": "مقيم راض",
-      "requests": "طلبات تمت معالجتها",
-      "uptime": "التوفر"
-    },
-    "cta": {
-      "title": "مستعد لتبسيط الإدارة؟",
-      "subtitle": "انضم إلى مئات السينديكات الذين يثقون في دارينسي",
-      "button": "تجربة مجانية لمدة 14 يوماً"
-    },
-    "footer": {
-      "tagline": "تبسيط إدارة العقارات في المغرب",
-      "product": "المنتج",
-      "company": "الشركة",
-      "legal": "قانوني",
-      "contact": "اتصل بنا",
-      "privacy": "سياسة الخصوصية",
-      "terms": "شروط الاستخدام",
-      "copyright": "© 2024 دارينسي. جميع الحقوق محفوظة."
-    }
+    "hero": {"title": "إدارة مبانيك بسهولة", "subtitle": "دارينسي هي منصة إدارة العقارات في المغرب", "cta": "ابدأ مجاناً", "ctaSecondary": "شاهد العرض"},
+    "features": {"title": "كل ما تحتاجه", "buildings": {"title": "إدارة المباني"}, "residents": {"title": "دليل المقيمين"}, "finances": {"title": "المالية"}, "maintenance": {"title": "الصيانة"}, "reports": {"title": "التقارير"}},
+    "cta": {"title": "مستعد للبدء؟", "button": "تجربة مجانية"}
   },
-  "auth": {
-    "login": {
-      "title": "تسجيل الدخول",
-      "subtitle": "الوصول إلى حسابك دارينسي",
-      "emailPlaceholder": "بريدك الإلكتروني",
-      "passwordPlaceholder": "كلمة المرور",
-      "rememberMe": "تذكرني",
-      "forgotPassword": "نسيت كلمة المرور؟",
-      "submit": "تسجيل الدخول",
-      "noAccount": "ليس لديك حساب بعد؟",
-      "signUp": "إنشاء حساب",
-      "errors": {
-        "invalidEmail": "بريد إلكتروني غير صالح",
-        "invalidPassword": "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل",
-        "invalidCredentials": "بريد إلكتروني أو كلمة مرور غير صحيحة"
-      }
-    }
-  },
-  "dashboard": {
-    "welcome": "مرحباً",
-    "overview": "نظرة عامة",
-    "recentActivity": "النشاط الأخير",
-    "quickActions": "إجراءات سريعة",
-    "viewAll": "عرض الكل",
-    "stats": {
-      "buildings": "المباني",
-      "residents": "المقيمون",
-      "pendingRequests": "الطلبات المعلقة",
-      "monthlyRevenue": "إيرادات الشهر"
-    },
-    "charts": {
-      "expensesTitle": "مصروفات الشهر",
-      "requestsTitle": "الطلبات حسب الحالة"
-    },
-    "recentRequests": {
-      "title": "الطلبات الأخيرة",
-      "viewAll": "عرض جميع الطلبات"
-    },
-    "upcomingPayments": {
-      "title": "المدفوعات القادمة"
-    }
-  },
-  "buildings": {
-    "title": "المباني",
-    "add": "إضافة مبنى",
-    "list": {
-      "name": "الاسم",
-      "address": "العنوان",
-      "residents": "المقيمون",
-      "actions": "الإجراءات"
-    },
-    "form": {
-      "name": "اسم المبنى",
-      "address": "العنوان",
-      "city": "المدينة",
-      "postalCode": "الرمز البريدي",
-      "description": "الوصف"
-    }
-  },
-  "residents": {
-    "title": "المقيمون",
-    "add": "إضافة مقيم",
-    "list": {
-      "name": "الاسم",
-      "apartment": "الشقة",
-      "email": "البريد الإلكتروني",
-      "phone": "الهاتف",
-      "role": "الدور",
-      "actions": "الإجراءات"
-    },
-    "roles": {
-      "owner": "المالك",
-      "resident": "المقيم",
-      "manager": "السيندك"
-    }
-  },
-  "finances": {
-    "title": "المالية",
-    "expenses": "المصروفات",
-    "income": "الإيرادات",
-    "balance": "الرصيد",
-    "addExpense": "إضافة مصروف",
-    "addIncome": "إضافة إيراد",
-    "table": {
-      "date": "التاريخ",
-      "description": "الوصف",
-      "category": "الفئة",
-      "amount": "المبلغ"
-    }
-  },
-  "requests": {
-    "title": "طلبات الصيانة",
-    "add": "طلب جديد",
-    "status": {
-      "pending": "معلق",
-      "in_progress": "قيد التنفيذ",
-      "completed": "مكتمل",
-      "cancelled": "ملغى"
-    },
-    "priority": {
-      "low": "منخفضة",
-      "medium": "متوسطة",
-      "high": "عالية",
-      "urgent": "عاجلة"
-    },
-    "table": {
-      "title": "العنوان",
-      "description": "الوصف",
-      "status": "الحالة",
-      "priority": "الأولوية",
-      "date": "التاريخ"
-    }
-  },
-  "settings": {
-    "title": "الإعدادات",
-    "profile": "الملف الشخصي",
-    "notifications": "الإشعارات",
-    "language": "اللغة",
-    "security": "الأمان"
-  }
+  "dashboard": {"welcome": "مرحباً", "overview": "نظرة عامة", "recentActivity": "النشاط الأخير", "quickActions": "إجراءات سريعة", "viewAll": "عرض الكل", "stats": {"buildings": "المباني", "residents": "المقيمون", "pendingRequests": "طلبات معلقة", "monthlyRevenue": "الإيرادات"}},
+  "buildings": {"title": "المباني", "add": "إضافة مبنى", "list": {"name": "الاسم", "address": "العنوان", "residents": "المقيمون", "actions": "الإجراءات"}, "form": {"name": "اسم المبنى", "address": "العنوان", "city": "المدينة", "postalCode": "الرمز البريدي", "description": "الوصف"}},
+  "residences": {"title": "الإقامة", "subtitle": "إدارة الإقامات", "add": "إضافة إقامة", "total": "الإجمالي", "apartments": "الشقق", "empty": "لا توجد إقامات", "emptyDescription": "ستظهر الإقامات هنا"},
+  "apartments": {"title": "الشقق", "subtitle": "إدارة الشقق", "add": "إضافة شقة", "total": "الإجمالي", "occupied": "مشغولة", "vacant": "شاغرة", "maintenance": "في الصيانة", "empty": "لا توجد شقق", "emptyDescription": "ستظهر الشقق هنا", "type": "النوع", "floor": "الطابق", "surface": "المساحة", "bedrooms": "غرف النوم", "resident": "المقيم", "status": {"occupied": "مشغول", "vacant": "شاغر", "maintenance": "في الصيانة"}, "form": {"number": "الرقم", "building": "المبنى", "type": "نوع الشقة", "floor": "الطابق", "surface": "المساحة", "bedrooms": "غرف النوم", "bathrooms": "الحمامات", "rentAmount": "الإيجار"}},
+  "residents": {"title": "المقيمون", "subtitle": "إدارة المقيمين", "add": "إضافة مقيم", "total": "إجمالي المقيمين", "occupiedApartments": "الشقق المشغولة", "vacantApartments": "الشقق الشاغرة", "searchPlaceholder": "بحث...", "empty": "لا يوجد مقيمين", "emptyDescription": "سيظهر المقيمين هنا", "table": {"name": "الاسم", "apartment": "الشقة", "email": "البريد", "phone": "الهاتف", "role": "الدور", "actions": "الإجراءات"}, "form": {"name": "الاسم الكامل", "email": "البريد", "phone": "الهاتف", "apartment": "الشقة"}},
+  "charges": {"title": "الرسوم", "subtitle": "إدارة الرسوم", "add": "إضافة رسوم", "searchPlaceholder": "بحث...", "totalCharges": "إجمالي الرسوم", "totalAmount": "المبلغ", "pendingAmount": "معلق", "paidAmount": "مدفوع", "month": "الشهر", "year": "السنة", "allMonths": "كل الأشهر", "allYears": "كل السنوات", "empty": "لا توجد رسوم", "emptyDescription": "ستظهر الرسوم هنا", "form": {"title": "العنوان", "amount": "المبلغ", "month": "الشهر", "year": "السنة", "dueDate": "الاستحقاق", "apartment": "الشقة"}},
+  "payments": {"title": "المدفوعات", "subtitle": "المدفوعات", "history": "السجل", "total": "الإجمالي", "paid": "مدفوع", "pending": "معلق", "overdue": "متأخر", "rate": "النسبة", "paidOn": "مدفوع في", "empty": "لا توجد مدفوعات", "emptyDescription": "ستظهر المدفوعات هنا"},
+  "finances": {"title": "المالية", "expenses": "المصروفات", "income": "الإيرادات", "balance": "الرصيد", "addExpense": "إضافة مصروف", "addIncome": "إضافة إيراد", "table": {"date": "التاريخ", "description": "الوصف", "category": "الفئة", "amount": "المبلغ", "actions": "الإجراءات"}, "form": {"description": "الوصف", "amount": "المبلغ", "category": "الفئة", "date": "التاريخ"}},
+  "requests": {"title": "طلبات الصيانة", "subtitle": "إدارة الطلبات", "add": "طلب جديد", "table": {"title": "العنوان", "description": "الوصف", "status": "الحالة", "priority": "الأولوية", "date": "التاريخ"}, "status": {"pending": "معلق", "inProgress": "قيد التنفيذ", "completed": "مكتمل", "cancelled": "ملغى"}, "priority": {"low": "منخفضة", "medium": "متوسطة", "high": "عالية", "urgent": "عاجلة"}, "empty": "لا توجد طلبات", "emptyDescription": "ستظهر الطلبات هنا"},
+  "settings": {"title": "الإعدادات", "profile": "الملف", "notifications": "الإشعارات", "language": "اللغة", "security": "الأمان"},
+  "users": {"title": "المستخدمون", "subtitle": "إدارة المستخدمين", "add": "إضافة مستخدم", "empty": "لا يوجد مستخدمين", "emptyDescription": "سيظهر المستخدمون هنا", "form": {"name": "الاسم", "email": "البريد", "phone": "الهاتف", "role": "الدور", "residence": "الإقامة", "apartment": "الشقة"}, "roles": {"owner": "المالك", "admin": "الادمن", "resident": "المقيم"}},
+  "reports": {"title": "التقارير", "subtitle": "تحليل البيانات", "generate": "إنشاء", "financial": "المالي", "occupancy": "الإشغال", "maintenance": "الصيانة", "payments": "المدفوعات"}
 }
