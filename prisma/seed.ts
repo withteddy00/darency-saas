@@ -9,6 +9,7 @@ async function main() {
   // Clean up existing data
   await prisma.maintenanceRequest.deleteMany()
   await prisma.payment.deleteMany()
+  await prisma.charge.deleteMany()
   await prisma.apartment.deleteMany()
   await prisma.admin.deleteMany()
   await prisma.expense.deleteMany()
@@ -49,6 +50,8 @@ async function main() {
         number: 'A1',
         floor: 1,
         building: 'A',
+        type: 'T2',
+        status: 'OCCUPIED',
         area: 85,
         bedrooms: 2,
         bathrooms: 1,
@@ -61,6 +64,8 @@ async function main() {
         number: 'A2',
         floor: 1,
         building: 'A',
+        type: 'T3',
+        status: 'OCCUPIED',
         area: 95,
         bedrooms: 2,
         bathrooms: 2,
@@ -73,10 +78,40 @@ async function main() {
         number: 'B1',
         floor: 2,
         building: 'B',
+        type: 'T4',
+        status: 'VACANT',
         area: 120,
         bedrooms: 3,
         bathrooms: 2,
         rentAmount: 5500,
+        residenceId: residence.id
+      }
+    }),
+    prisma.apartment.create({
+      data: {
+        number: 'B2',
+        floor: 2,
+        building: 'B',
+        type: 'T3',
+        status: 'OCCUPIED',
+        area: 100,
+        bedrooms: 2,
+        bathrooms: 2,
+        rentAmount: 4800,
+        residenceId: residence.id
+      }
+    }),
+    prisma.apartment.create({
+      data: {
+        number: 'C1',
+        floor: 3,
+        building: 'C',
+        type: 'Studio',
+        status: 'VACANT',
+        area: 45,
+        bedrooms: 1,
+        bathrooms: 1,
+        rentAmount: 2500,
         residenceId: residence.id
       }
     })
@@ -123,19 +158,153 @@ async function main() {
     }
   })
 
-  // Create RESIDENT user
-  const resident = await prisma.user.create({
-    data: {
-      email: 'resident@darency.ma',
-      password: residentPassword,
-      name: 'Ahmed Resident',
-      role: 'RESIDENT',
-      phone: '+212 663 345 678',
-      organizationId: org.id,
-      apartmentId: apartments[0].id
-    }
-  })
-  console.log('✅ Created RESIDENT user:', resident.email)
+  // Create RESIDENT users
+  const residents = await Promise.all([
+    prisma.user.create({
+      data: {
+        email: 'resident@darency.ma',
+        password: residentPassword,
+        name: 'Ahmed Resident',
+        role: 'RESIDENT',
+        phone: '+212 663 345 678',
+        organizationId: org.id,
+        apartmentId: apartments[0].id
+      }
+    }),
+    prisma.user.create({
+      data: {
+        email: 'youssef@darency.ma',
+        password: residentPassword,
+        name: 'Youssef Amrani',
+        role: 'RESIDENT',
+        phone: '+212 664 456 789',
+        organizationId: org.id,
+        apartmentId: apartments[1].id
+      }
+    }),
+    prisma.user.create({
+      data: {
+        email: 'fatima@darency.ma',
+        password: residentPassword,
+        name: 'Fatima El Amrani',
+        role: 'RESIDENT',
+        phone: '+212 665 567 890',
+        organizationId: org.id,
+        apartmentId: apartments[3].id
+      }
+    })
+  ])
+  console.log('✅ Created RESIDENT users:', residents.length)
+
+  // Create Charges
+  const currentMonth = new Date().getMonth() + 1
+  const currentYear = new Date().getFullYear()
+
+  const charges = await Promise.all([
+    // Apartment A1 charges
+    prisma.charge.create({
+      data: {
+        title: 'Charges communes Janvier 2026',
+        category: 'OTHER',
+        amount: 450,
+        month: 1,
+        year: 2026,
+        dueDate: new Date('2026-01-31'),
+        residenceId: residence.id,
+        apartmentId: apartments[0].id
+      }
+    }),
+    prisma.charge.create({
+      data: {
+        title: 'Charges communes Février 2026',
+        category: 'OTHER',
+        amount: 450,
+        month: 2,
+        year: 2026,
+        dueDate: new Date('2026-02-28'),
+        residenceId: residence.id,
+        apartmentId: apartments[0].id
+      }
+    }),
+    // Apartment A2 charges
+    prisma.charge.create({
+      data: {
+        title: 'Charges communes Janvier 2026',
+        category: 'OTHER',
+        amount: 520,
+        month: 1,
+        year: 2026,
+        dueDate: new Date('2026-01-31'),
+        residenceId: residence.id,
+        apartmentId: apartments[1].id
+      }
+    }),
+    // Apartment B2 charges
+    prisma.charge.create({
+      data: {
+        title: 'Charges communes Janvier 2026',
+        category: 'OTHER',
+        amount: 480,
+        month: 1,
+        year: 2026,
+        dueDate: new Date('2026-01-31'),
+        residenceId: residence.id,
+        apartmentId: apartments[3].id
+      }
+    })
+  ])
+  console.log('✅ Created', charges.length, 'charges')
+
+  // Create Payments
+  const payments = await Promise.all([
+    // A1 - Paid for January
+    prisma.payment.create({
+      data: {
+        amount: 450,
+        status: 'PAID',
+        method: 'TRANSFER',
+        dueDate: new Date('2026-01-31'),
+        paidDate: new Date('2026-01-28'),
+        apartmentId: apartments[0].id,
+        chargeId: charges[0].id
+      }
+    }),
+    // A1 - Pending for February
+    prisma.payment.create({
+      data: {
+        amount: 450,
+        status: 'PENDING',
+        dueDate: new Date('2026-02-28'),
+        apartmentId: apartments[0].id,
+        chargeId: charges[1].id
+      }
+    }),
+    // A2 - Paid for January
+    prisma.payment.create({
+      data: {
+        amount: 520,
+        status: 'PAID',
+        method: 'CARD',
+        dueDate: new Date('2026-01-31'),
+        paidDate: new Date('2026-01-25'),
+        apartmentId: apartments[1].id,
+        chargeId: charges[2].id
+      }
+    }),
+    // B2 - Paid for January
+    prisma.payment.create({
+      data: {
+        amount: 480,
+        status: 'PAID',
+        method: 'CASH',
+        dueDate: new Date('2026-01-31'),
+        paidDate: new Date('2026-01-30'),
+        apartmentId: apartments[3].id,
+        chargeId: charges[3].id
+      }
+    })
+  ])
+  console.log('✅ Created', payments.length, 'payments')
 
   // Create sample expenses
   await Promise.all([
@@ -169,64 +338,30 @@ async function main() {
   ])
   console.log('✅ Created sample expenses')
 
-  // Create sample payments
-  await Promise.all([
-    prisma.payment.create({
-      data: {
-        amount: 3500,
-        month: 3,
-        year: 2026,
-        status: 'PENDING',
-        dueDate: new Date('2026-03-05'),
-        apartmentId: apartments[0].id
-      }
-    }),
-    prisma.payment.create({
-      data: {
-        amount: 4000,
-        month: 3,
-        year: 2026,
-        status: 'PAID',
-        dueDate: new Date('2026-03-01'),
-        paidDate: new Date('2026-02-28'),
-        apartmentId: apartments[1].id
-      }
-    }),
-    prisma.payment.create({
-      data: {
-        amount: 5500,
-        month: 3,
-        year: 2026,
-        status: 'PENDING',
-        dueDate: new Date('2026-03-10'),
-        apartmentId: apartments[2].id
-      }
-    })
-  ])
-  console.log('✅ Created sample payments')
-
   // Create sample maintenance requests
   await Promise.all([
     prisma.maintenanceRequest.create({
       data: {
         title: 'Fuite d\'eau dans la cuisine',
-        description: 'Il y a une fuite d\'eau sous l\'évier de la cuisine',
+        description: 'Il y a une fuite d\'eau sous l\'évier de la cuisine depuis 2 jours',
         status: 'PENDING',
         priority: 'HIGH',
+        category: 'PLUMBING',
         residenceId: residence.id,
         apartmentId: apartments[0].id,
-        reportedById: resident.id
+        reportedById: residents[0].id
       }
     }),
     prisma.maintenanceRequest.create({
       data: {
         title: 'Panne d\'ascenseur',
-        description: 'L\'ascenseur ne fonctionne plus depuis hier',
+        description: 'L\'ascenseur ne fonctionne plus depuis hier au niveau du bâtiment B',
         status: 'IN_PROGRESS',
         priority: 'URGENT',
+        category: 'ELEVATOR',
         residenceId: residence.id,
         apartmentId: apartments[1].id,
-        reportedById: admin.id
+        reportedById: residents[1].id
       }
     }),
     prisma.maintenanceRequest.create({
@@ -235,10 +370,23 @@ async function main() {
         description: 'L\'ampoule du couloir du 2ème étage est grillée',
         status: 'COMPLETED',
         priority: 'LOW',
+        category: 'ELECTRICAL',
         residenceId: residence.id,
         apartmentId: apartments[2].id,
-        reportedById: resident.id,
+        reportedById: residents[2].id,
         resolvedAt: new Date('2026-02-20')
+      }
+    }),
+    prisma.maintenanceRequest.create({
+      data: {
+        title: 'Climatisation ne fonctionne pas',
+        description: 'La climatisation ne cooling pas correctement',
+        status: 'PENDING',
+        priority: 'MEDIUM',
+        category: 'HVAC',
+        residenceId: residence.id,
+        apartmentId: apartments[0].id,
+        reportedById: residents[0].id
       }
     })
   ])
@@ -249,6 +397,12 @@ async function main() {
   console.log('  OWNER:    owner@darency.ma    / Owner123!')
   console.log('  ADMIN:    admin@darency.ma    / Admin123!')
   console.log('  RESIDENT: resident@darency.ma / Resident123!')
+  console.log('\nApartments:')
+  console.log('  A1 (T2) - Ahmed Resident')
+  console.log('  A2 (T3) - Youssef Amrani')
+  console.log('  B1 (T4) - Vacant')
+  console.log('  B2 (T3) - Fatima El Amrani')
+  console.log('  C1 (Studio) - Vacant')
 }
 
 main()

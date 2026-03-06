@@ -1,81 +1,232 @@
 'use client'
 
-import { useTranslations } from '@/hooks/use-translations'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { PrismaClient } from '@prisma/client'
+import { Users, Plus, Search, MoreVertical, Edit, Trash2, Eye } from 'lucide-react'
+import { DashboardLayout, SectionCard, EmptyState, StatCard } from '@/components/dashboard'
 
-const residents = [
-  { id: 1, name: 'Mohamed Rachidi', email: 'mohamed.rachidi@email.com', phone: '+212 6 12 34 56 78', apartment: 'A12', building: 'Résidence Al-Manar', role: 'owner' },
-  { id: 2, name: 'Fatima Zahra', email: 'fatima.zahra@email.com', phone: '+212 6 23 45 67 89', apartment: 'B8', building: 'Résidence Al-Manar', role: 'resident' },
-  { id: 3, name: 'Ahmed Kaddouri', email: 'ahmed.kaddouri@email.com', phone: '+212 6 34 56 78 90', apartment: 'C3', building: 'Résidence Assa', role: 'owner' },
-  { id: 4, name: 'Youssef Amrani', email: 'youssef.amrani@email.com', phone: '+212 6 45 67 89 01', apartment: 'B12', building: 'Résidence Assa', role: 'resident' },
-  { id: 5, name: 'Khadija Idrissi', email: 'khadija.idrissi@email.com', phone: '+212 6 56 78 90 12', apartment: 'D5', building: 'Résidence Oasis', role: 'owner' },
-  { id: 6, name: 'Omar Bensaid', email: 'omar.bensaid@email.com', phone: '+212 6 67 89 01 23', apartment: 'A3', building: 'Résidence Les Palmes', role: 'resident' },
-]
+const prisma = new PrismaClient()
 
-export default function ResidentsPage({ params }: { params: { locale: string } }) {
+interface ResidentWithApartment {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  apartment: {
+    number: string
+    building: string | null
+    type: string
+    status: string
+  } | null
+}
+
+interface PageProps {
+  params: { locale: string }
+}
+
+export default function ResidentsPage({ params }: PageProps) {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const { locale } = params
-  const t = useTranslations(locale)
+  const [residents, setResidents] = useState<ResidentWithApartment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push(`/${locale}/login`)
+    } else if (status === 'authenticated' && session?.user?.role !== 'ADMIN' && session?.user?.role !== 'OWNER') {
+      if (session?.user?.role === 'RESIDENT') {
+        router.push(`/${locale}/resident`)
+      }
+    }
+  }, [status, session, router, locale])
+
+  useEffect(() => {
+    if (status === 'authenticated' && (session?.user?.role === 'ADMIN' || session?.user?.role === 'OWNER')) {
+      fetchResidents()
+    }
+  }, [status, session])
+
+  const fetchResidents = async () => {
+    try {
+      const response = await fetch('/api/residents')
+      if (response.ok) {
+        const data = await response.json()
+        setResidents(data)
+      }
+    } catch (error) {
+      console.error('Error fetching residents:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (status === 'loading' || loading) {
+    return (
+      <DashboardLayout locale={locale} role={session?.user?.role || 'ADMIN'}>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'OWNER')) {
+    return null
+  }
+
+  const t = {
+    fr: {
+      title: 'Résidents',
+      description: 'Gérez les résidents de votre propriété',
+      searchPlaceholder: 'Rechercher un résident...',
+      emptyTitle: 'Aucun résident',
+      emptyDescription: 'Les résidents apparaîtront ici une fois ajoutés',
+      addResident: 'Ajouter un résident',
+      totalResidents: 'Total résidents',
+      occupiedApartments: 'Appartements occupés',
+      vacantApartments: 'Appartements vacants',
+      name: 'Nom',
+      email: 'Email',
+      phone: 'Téléphone',
+      apartment: 'Appartement',
+      status: 'Statut',
+      actions: 'Actions',
+      OCCUPIED: 'Occupé',
+      VACANT: 'Vacant',
+    },
+    ar: {
+      title: 'المقيمين',
+      description: 'إدارة المقيمين في عقارك',
+      searchPlaceholder: 'البحث عن مقيم...',
+      emptyTitle: 'لا يوجد مقيمون',
+      emptyDescription: 'سيظهر المقيمون هنا بمجرد إضافتهم',
+      addResident: 'إضافة مقيم',
+      totalResidents: 'إجمالي المقيمين',
+      occupiedApartments: 'الشقق المشغولة',
+      vacantApartments: 'الشقق الشاغرة',
+      name: 'الاسم',
+      email: 'البريد الإلكتروني',
+      phone: 'الهاتف',
+      apartment: 'الشقة',
+      status: 'الحالة',
+      actions: 'الإجراءات',
+      OCCUPIED: 'مشغول',
+      VACANT: 'شاغر',
+    }
+  }
+
+  const translations = t[locale as 'fr' | 'ar'] || t.fr
+
+  const filteredResidents = residents.filter(resident =>
+    resident.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    resident.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (resident.apartment && resident.apartment.number.toLowerCase().includes(searchQuery.toLowerCase()))
+  )
+
+  const stats = [
+    { title: translations.totalResidents, value: residents.length.toString(), change: '', changeType: 'neutral' as const, icon: Users, iconColor: 'text-primary' },
+    { title: translations.occupiedApartments, value: residents.filter(r => r.apartment?.status === 'OCCUPIED').length.toString(), change: '', changeType: 'positive' as const, icon: Users, iconColor: 'text-success' },
+    { title: translations.vacantApartments, value: residents.filter(r => !r.apartment || r.apartment.status === 'VACANT').length.toString(), change: '', changeType: 'neutral' as const, icon: Users, iconColor: 'text-warning' },
+  ]
 
   return (
-    <div>
-      <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="page-title">{t('residents.title')}</h1>
-          <p className="page-subtitle">{t('dashboard.stats.residents')}</p>
-        </div>
-        <Button>
-          <PlusIcon className="w-4 h-4 mr-2" />
-          {t('residents.add')}
-        </Button>
-      </div>
-
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left px-6 py-4 text-sm font-medium text-text-secondary">{t('residents.list.name')}</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-text-secondary">{t('residents.list.apartment')}</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-text-secondary">{t('residents.list.email')}</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-text-secondary">{t('residents.list.phone')}</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-text-secondary">{t('residents.list.role')}</th>
-                  <th className="text-right px-6 py-4 text-sm font-medium text-text-secondary">{t('common.actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {residents.map((resident, index) => (
-                  <tr key={resident.id} className="border-b border-border hover:bg-surface-elevated/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-primary font-medium">{resident.name.charAt(0)}</span>
-                        </div>
-                        <span className="font-medium text-text-primary">{resident.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-text-secondary">{resident.apartment}</td>
-                    <td className="px-6 py-4 text-text-secondary">{resident.email}</td>
-                    <td className="px-6 py-4 text-text-secondary">{resident.phone}</td>
-                    <td className="px-6 py-4">
-                      <span className={`badge ${resident.role === 'owner' ? 'badge-warning' : 'badge-info'}`}>
-                        {t(`residents.roles.${resident.role}`)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button className="p-2 hover:bg-surface-elevated rounded-lg transition-colors">
-                        <EyeIcon className="w-4 h-4 text-text-tertiary" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+    <DashboardLayout locale={locale} role={session.user.role}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-text-primary">{translations.title}</h1>
+            <p className="text-text-secondary mt-1">{translations.description}</p>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {stats.map((stat, index) => (
+            <StatCard key={index} {...stat} />
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+          <input
+            type="text"
+            placeholder={translations.searchPlaceholder}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+        </div>
+
+        {/* Residents Table */}
+        <SectionCard title="">
+          {filteredResidents.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left px-4 py-3 text-sm font-medium text-text-secondary">{translations.name}</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium text-text-secondary">{translations.apartment}</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium text-text-secondary">{translations.email}</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium text-text-secondary">{translations.phone}</th>
+                    <th className="text-right px-4 py-3 text-sm font-medium text-text-secondary">{translations.actions}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredResidents.map((resident) => (
+                    <tr key={resident.id} className="border-b border-border hover:bg-surface-elevated/50 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-primary font-medium">{resident.name.charAt(0)}</span>
+                          </div>
+                          <span className="font-medium text-text-primary">{resident.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {resident.apartment ? (
+                          <div>
+                            <span className="text-text-primary">{resident.apartment.number}</span>
+                            {resident.apartment.building && (
+                              <span className="text-text-tertiary text-sm ml-1">({resident.apartment.building})</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-text-tertiary">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-text-secondary">{resident.email}</td>
+                      <td className="px-4 py-3 text-text-secondary">{resident.phone || '-'}</td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button className="p-2 hover:bg-surface-elevated rounded-lg transition-colors" title="View">
+                            <Eye className="w-4 h-4 text-text-tertiary" />
+                          </button>
+                          <button className="p-2 hover:bg-surface-elevated rounded-lg transition-colors" title="Edit">
+                            <Edit className="w-4 h-4 text-text-tertiary" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState 
+              icon={Users}
+              title={translations.emptyTitle}
+              description={translations.emptyDescription}
+            />
+          )}
+        </SectionCard>
+      </div>
+    </DashboardLayout>
   )
 }
 
