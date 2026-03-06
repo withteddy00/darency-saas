@@ -116,6 +116,13 @@ model Apartment {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Occupancy tracking
+  occupancyType      String?  // OWNER_OCCUPIED, RENTED
+  currentOccupantName String?
+  currentOccupantPhone String?
+  moveInDate        DateTime?
+  moveOutDate       DateTime?
+
   // Relations
   residenceId String
   residence   Residence @relation(fields: [residenceId], references: [id])
@@ -124,8 +131,43 @@ model Apartment {
   payments     Payment[]
   charges     Charge[]
   maintenanceRequests MaintenanceRequest[]
+  occupancyHistory   ApartmentOccupancyHistory[]
+  apartmentHistory   ApartmentHistory[]
 
   @@unique([residenceId, number])
+}
+
+// Apartment Occupancy History - tracks all occupants over time
+model ApartmentOccupancyHistory {
+  id            String   @id @default(cuid())
+  occupantName  String
+  occupantPhone String?
+  occupancyType String  // OWNER_OCCUPIED, RENTED
+  moveInDate   DateTime
+  moveOutDate  DateTime?
+  notes         String?
+  createdAt    DateTime @default(now())
+
+  // Relations
+  apartmentId String
+  apartment   Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+}
+
+// Apartment History - tracks events like complaints, modifications, etc.
+model ApartmentHistory {
+  id          String   @id @default(cuid())
+  eventType   String   // OCCUPANT_CHANGE, COMPLAINT, ADMIN_MODIFICATION, MOVE_IN, MOVE_OUT, STATUS_CHANGE
+  description String
+  notes       String?
+  createdAt  DateTime @default(now())
+
+  // Optional link to related entities
+  relatedUserId String?
+  maintenanceRequestId String?
+
+  // Relations
+  apartmentId String
+  apartment   Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
 }
 
 // Charge (monthly charges for an apartment)
