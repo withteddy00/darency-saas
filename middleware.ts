@@ -4,8 +4,8 @@ import { getToken } from 'next-auth/jwt'
 
 // Route access control by role
 const roleRoutes: Record<string, string[]> = {
-  OWNER: ['/owner', '/admin', '/resident', '/dashboard'],
-  ADMIN: ['/admin', '/dashboard'],
+  OWNER: ['/owner'],
+  ADMIN: ['/admin'],
   RESIDENT: ['/resident'],
 }
 
