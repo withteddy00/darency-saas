@@ -21,9 +21,34 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Subscription
+  plan           String   @default("STARTER") // STARTER, PRO, ENTERPRISE
+  planStartDate DateTime @default(now())
+  planEndDate   DateTime?
+  
   // Relations
   users      User[]
   residences Residence[]
+}
+
+// Subscription Plan
+model SubscriptionPlan {
+  id          String   @id @default(cuid())
+  name        String   // Starter, Pro, Enterprise
+  slug        String   @unique
+  description String?
+  price       Float    // Monthly price in MAD
+  yearlyPrice Float?   // Yearly price in MAD
+  features    String   // JSON string of features
+  maxResidences Int    @default(1)
+  maxAdmins     Int    @default(1)
+  maxApartments Int    @default(50)
+  hasAdvancedReports Boolean @default(false)
+  hasPrioritySupport Boolean @default(false)
+  hasApiAccess   Boolean @default(false)
+  isActive      Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // Residence (Building complex)
