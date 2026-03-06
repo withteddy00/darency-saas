@@ -4,7 +4,18 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { 
+  Building2, 
+  Users, 
+  CreditCard, 
+  Wrench, 
+  TrendingUp,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+  Clock
+} from 'lucide-react'
+import { DashboardLayout, StatCard, SectionCard, ActivityList, QuickActionCard } from '@/components/dashboard'
 import { formatCurrency } from '@/lib/utils'
 
 export default function OwnerDashboard({ params }: { params: { locale: string } }) {
@@ -16,7 +27,6 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
     if (status === 'unauthenticated') {
       router.push(`/${locale}/login`)
     } else if (status === 'authenticated' && session?.user?.role !== 'OWNER') {
-      // Redirect to appropriate dashboard based on role
       if (session?.user?.role === 'ADMIN') {
         router.push(`/${locale}/admin`)
       } else if (session?.user?.role === 'RESIDENT') {
@@ -37,151 +47,238 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
     return null
   }
 
+  const t = {
+    fr: {
+      welcome: 'Bienvenue',
+      overview: 'Vue d\'ensemble',
+      totalResidences: 'Résidences',
+      totalAdmins: 'Administrateurs',
+      totalResidents: 'Résidents',
+      unpaidCharges: 'Charges impayées',
+      maintenanceRequests: 'Demandes de maintenance',
+      occupancyRate: 'Taux d\'occupation',
+      monthlyRevenue: 'Revenus mensuels',
+      recentActivity: 'Activité récente',
+      quickActions: 'Actions rapides',
+      viewAll: 'Voir tout',
+      topResidences: 'Résidences principales',
+      pendingTasks: 'Tâches en attente',
+      financialSummary: 'Résumé financier',
+      payments: 'Paiements',
+      expenses: 'Dépenses',
+      revenue: 'Revenus',
+      netIncome: 'Revenu net',
+      addResidence: 'Ajouter une résidence',
+      manageUsers: 'Gérer les utilisateurs',
+      viewReports: 'Voir les rapports',
+      settings: 'Paramètres',
+    },
+    ar: {
+      welcome: 'مرحباً',
+      overview: 'نظرة عامة',
+      totalResidences: 'العقارات',
+      totalAdmins: 'المسؤولون',
+      totalResidents: 'المقيمون',
+      unpaidCharges: 'الرسوم غير المدفوعة',
+      maintenanceRequests: 'طلبات الصيانة',
+      occupancyRate: 'معدل الإشغال',
+      monthlyRevenue: 'الإيرادات الشهرية',
+      recentActivity: 'النشاط الأخير',
+      quickActions: 'إجراءات سريعة',
+      viewAll: 'عرض الكل',
+      topResidences: 'أفضل العقارات',
+      pendingTasks: 'المهام المعلقة',
+      financialSummary: 'الملخص المالي',
+      payments: 'المدفوعات',
+      expenses: 'المصروفات',
+      revenue: 'الإيرادات',
+      netIncome: 'صافي الدخل',
+      addResidence: 'إضافة عقار',
+      manageUsers: 'إدارة المستخدمين',
+      viewReports: 'عرض التقارير',
+      settings: 'الإعدادات',
+    }
+  }
+
+  const translations = t[locale as 'fr' | 'ar'] || t.fr
+
+  // Mock data for demonstration
+  const stats = [
+    { title: translations.totalResidences, value: '3', change: '+1 ce mois', changeType: 'positive' as const, icon: Building2, iconColor: 'text-primary' },
+    { title: translations.totalAdmins, value: '1', change: 'Actif', changeType: 'neutral' as const, icon: Users, iconColor: 'text-secondary' },
+    { title: translations.totalResidents, value: '12', change: '+3 ce mois', changeType: 'positive' as const, icon: Users, iconColor: 'text-accent' },
+    { title: translations.unpaidCharges, value: formatCurrency(4500), change: '2 en retard', changeType: 'negative' as const, icon: CreditCard, iconColor: 'text-warning' },
+  ]
+
+  const recentActivity = [
+    { id: '1', title: 'Nouveau résident enregistré', description: 'Ahmed Benali - Résidence Al-Manar', time: 'Il y a 2h', icon: Users, iconColor: 'text-success' },
+    { id: '2', title: 'Paiement reçu', description: '2 500 DH - Mohamed Khatri', time: 'Il y a 5h', icon: CreditCard, iconColor: 'text-primary' },
+    { id: '3', title: 'Demande de maintenance', description: 'Fuite d\'eau - Appartement 204', time: 'Hier', icon: Wrench, iconColor: 'text-warning' },
+    { id: '4', title: 'Rapport mensuel généré', description: 'Janvier 2026', time: 'Il y a 2 jours', icon: TrendingUp, iconColor: 'text-secondary' },
+  ]
+
+  const topResidences = [
+    { name: 'Résidence Al-Manar', units: 12, occupancy: 92, revenue: 15000 },
+    { name: 'Résidence Les Oliviers', units: 8, occupancy: 100, revenue: 12000 },
+    { name: 'Résidence Marina', units: 6, occupancy: 83, revenue: 9000 },
+  ]
+
+  const pendingTasks = [
+    { id: '1', title: 'Valider le paiement de 2 500 DH', type: 'payment', priority: 'high' as const },
+    { id: '2', title: 'Approuver la demande de maintenance #124', type: 'maintenance', priority: 'medium' as const },
+    { id: '3', title: 'Mettre à jour les charges mensuelles', type: 'charge', priority: 'low' as const },
+  ]
+
   return (
-    <div>
-      <div className="page-header">
+    <DashboardLayout locale={locale} role="OWNER">
+      <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="page-title">
-              {locale === 'ar' ? 'لوحة تحكم المالك' : 'Dashboard Propriétaire'}
+            <h1 className="text-2xl font-bold text-text-primary">
+              {translations.welcome}, {session.user.name} 👋
             </h1>
-            <p className="page-subtitle">
-              {locale === 'ar' 
-                ? `مرحباً، ${session.user.name}` 
-                : `Bienvenue, ${session.user.name}`}
-              👋
-            </p>
+            <p className="text-text-secondary mt-1">{translations.overview}</p>
           </div>
-          <div className="badge badge-primary">
-            {locale === 'ar' ? 'مالك' : 'PROPRIÉTAIRE'}
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full">
+              PROPRIÉTAIRE
+            </span>
           </div>
         </div>
-      </div>
 
-      {/* Organization Info */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg">
-            {locale === 'ar' ? 'معلومات المؤسسة' : 'Information de l\'organisation'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-text-secondary">
-                {locale === 'ar' ? 'اسم المؤسسة' : 'Nom de l\'organisation'}
-              </p>
-              <p className="font-medium">{session.user.organizationName}</p>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, index) => (
+            <StatCard key={index} {...stat} />
+          ))}
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Activity */}
+          <div className="lg:col-span-2">
+            <SectionCard 
+              title={translations.recentActivity}
+              action={
+                <Link href={`/${locale}/owner/reports`} className="text-sm text-primary hover:underline flex items-center gap-1">
+                  {translations.viewAll} <ArrowRight className="w-4 h-4" />
+                </Link>
+              }
+            >
+              <ActivityList items={recentActivity} />
+            </SectionCard>
+          </div>
+
+          {/* Pending Tasks */}
+          <div>
+            <SectionCard title={translations.pendingTasks}>
+              <div className="space-y-3">
+                {pendingTasks.map((task) => (
+                  <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors">
+                    <div className={`p-2 rounded-lg ${
+                      task.priority === 'high' ? 'bg-error/10 text-error' :
+                      task.priority === 'medium' ? 'bg-warning/10 text-warning' :
+                      'bg-surface-elevated text-text-tertiary'
+                    }`}>
+                      {task.priority === 'high' ? (
+                        <AlertCircle className="w-4 h-4" />
+                      ) : task.priority === 'medium' ? (
+                        <Clock className="w-4 h-4" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-text-primary">{task.title}</p>
+                      <p className="text-xs text-text-tertiary mt-0.5 capitalize">{task.type}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+          </div>
+        </div>
+
+        {/* Top Residences & Quick Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SectionCard 
+            title={translations.topResidences}
+            action={
+              <Link href={`/${locale}/owner/residences`} className="text-sm text-primary hover:underline flex items-center gap-1">
+                {translations.viewAll} <ArrowRight className="w-4 h-4" />
+              </Link>
+            }
+          >
+            <div className="space-y-4">
+              {topResidences.map((residence, index) => (
+                <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-elevated transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Building2 className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-text-primary">{residence.name}</p>
+                      <p className="text-sm text-text-tertiary">{residence.units} unités</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-text-primary">{formatCurrency(residence.revenue)}</p>
+                    <p className="text-sm text-success">{residence.occupancy}% occupation</p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div>
-              <p className="text-sm text-text-secondary">Email</p>
-              <p className="font-medium">{session.user.email}</p>
+          </SectionCard>
+
+          <SectionCard title={translations.quickActions}>
+            <div className="grid grid-cols-2 gap-4">
+              <QuickActionCard
+                icon={Building2}
+                title={translations.addResidence}
+                description="Ajouter une nouvelle propriété"
+              />
+              <QuickActionCard
+                icon={Users}
+                title={translations.manageUsers}
+                description="Gérer les utilisateurs"
+              />
+              <QuickActionCard
+                icon={TrendingUp}
+                title={translations.viewReports}
+                description="Voir les statistiques"
+              />
+              <QuickActionCard
+                icon={Wrench}
+                title={translations.settings}
+                description="Configurer le compte"
+              />
+            </div>
+          </SectionCard>
+        </div>
+
+        {/* Financial Summary */}
+        <SectionCard title={translations.financialSummary}>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="p-4 bg-surface-elevated rounded-xl">
+              <p className="text-sm text-text-secondary">{translations.revenue}</p>
+              <p className="text-2xl font-bold text-success mt-1">{formatCurrency(36000)}</p>
+            </div>
+            <div className="p-4 bg-surface-elevated rounded-xl">
+              <p className="text-sm text-text-secondary">{translations.expenses}</p>
+              <p className="text-2xl font-bold text-error mt-1">{formatCurrency(8500)}</p>
+            </div>
+            <div className="p-4 bg-surface-elevated rounded-xl">
+              <p className="text-sm text-text-secondary">{translations.netIncome}</p>
+              <p className="text-2xl font-bold text-primary mt-1">{formatCurrency(27500)}</p>
+            </div>
+            <div className="p-4 bg-surface-elevated rounded-xl">
+              <p className="text-sm text-text-secondary">{translations.unpaidCharges}</p>
+              <p className="text-2xl font-bold text-warning mt-1">{formatCurrency(4500)}</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-text-secondary mb-1">
-              {locale === 'ar' ? 'العقارات' : 'Résidences'}
-            </p>
-            <p className="text-3xl font-bold text-text-primary">1</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-text-secondary mb-1">
-              {locale === 'ar' ? 'الشقق' : 'Appartements'}
-            </p>
-            <p className="text-3xl font-bold text-text-primary">3</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-text-secondary mb-1">
-              {locale === 'ar' ? 'المستخدمون' : 'Utilisateurs'}
-            </p>
-            <p className="text-3xl font-bold text-text-primary">3</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-text-secondary mb-1">
-              {locale === 'ar' ? 'الإيرادات الشهرية' : 'Revenus mensuels'}
-            </p>
-            <p className="text-3xl font-bold text-primary">{formatCurrency(13000)}</p>
-          </CardContent>
-        </Card>
+        </SectionCard>
       </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {locale === 'ar' ? 'إجراءات سريعة' : 'Actions rapides'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Link
-              href={`/${locale}/owner/residences`}
-              className="flex flex-col items-center justify-center p-4 bg-surface-elevated rounded-xl hover:bg-primary-light/20 transition-colors group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-text-secondary group-hover:text-primary">
-                {locale === 'ar' ? 'العقارات' : 'Résidences'}
-              </span>
-            </Link>
-            <Link
-              href={`/${locale}/owner/users`}
-              className="flex flex-col items-center justify-center p-4 bg-surface-elevated rounded-xl hover:bg-primary-light/20 transition-colors group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-text-secondary group-hover:text-primary">
-                {locale === 'ar' ? 'المستخدمون' : 'Utilisateurs'}
-              </span>
-            </Link>
-            <Link
-              href={`/${locale}/owner/settings`}
-              className="flex flex-col items-center justify-center p-4 bg-surface-elevated rounded-xl hover:bg-primary-light/20 transition-colors group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-text-secondary group-hover:text-primary">
-                {locale === 'ar' ? 'الإعدادات' : 'Paramètres'}
-              </span>
-            </Link>
-            <Link
-              href={`/${locale}/owner/reports`}
-              className="flex flex-col items-center justify-center p-4 bg-surface-elevated rounded-xl hover:bg-primary-light/20 transition-colors group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-text-secondary group-hover:text-primary">
-                {locale === 'ar' ? 'التقارير' : 'Rapports'}
-              </span>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    </DashboardLayout>
   )
 }
