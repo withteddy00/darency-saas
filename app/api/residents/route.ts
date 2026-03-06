@@ -13,6 +13,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // ADMIN must have an assigned residence to access this endpoint
+    if (session.user.role === 'ADMIN' && !session.user.residenceId) {
+      return NextResponse.json({ error: 'Admin residence not assigned. Please contact the owner.' }, { status: 403 })
+    }
+
     // Get admin's residence ID if ADMIN
     let residenceId = null
     if (session.user.role === 'ADMIN' && session.user.residenceId) {
@@ -74,6 +79,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // ADMIN must have an assigned residence to perform this action
+    const adminResidenceId = session.user.residenceId
+
+    if (!adminResidenceId) {
+      return NextResponse.json({ error: 'Admin residence not assigned. Please contact the owner.' }, { status: 403 })
+    }
+
     const body = await request.json()
     const { name, email, phone, apartmentId } = body
 
@@ -92,14 +104,9 @@ export async function POST(request: Request) {
 
     // Get organization ID from session
     const organizationId = session.user.organizationId
-    const adminResidenceId = session.user.residenceId
 
     if (!organizationId) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 400 })
-    }
-
-    if (!adminResidenceId) {
-      return NextResponse.json({ error: 'Residence not assigned' }, { status: 400 })
     }
 
     // If apartment is provided, verify it belongs to this admin's residence
