@@ -9,6 +9,9 @@ const roleRoutes: Record<string, string[]> = {
   RESIDENT: ['/resident'],
 }
 
+// Public routes that don't require authentication
+const publicRoutes = ['/', '/fr', '/ar']
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -22,9 +25,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Handle root path - redirect to default locale
+  // Handle root path - redirect to default locale (fr)
   if (pathname === '/') {
     return NextResponse.redirect(new URL('/fr', request.url))
+  }
+
+  // Allow public routes (landing pages)
+  if (publicRoutes.includes(pathname)) {
+    return NextResponse.next()
   }
 
   // Allow login page without authentication
