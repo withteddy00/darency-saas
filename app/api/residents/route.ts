@@ -92,9 +92,28 @@ export async function POST(request: Request) {
 
     // Get organization ID from session
     const organizationId = session.user.organizationId
+    const adminResidenceId = session.user.residenceId
 
     if (!organizationId) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 400 })
+    }
+
+    if (!adminResidenceId) {
+      return NextResponse.json({ error: 'Residence not assigned' }, { status: 400 })
+    }
+
+    // If apartment is provided, verify it belongs to this admin's residence
+    if (apartmentId) {
+      const apartment = await prisma.apartment.findFirst({
+        where: {
+          id: apartmentId,
+          residenceId: adminResidenceId
+        }
+      })
+
+      if (!apartment) {
+        return NextResponse.json({ error: 'Apartment not found in your residence' }, { status: 403 })
+      }
     }
 
     // Create the resident user
@@ -107,7 +126,6 @@ export async function POST(request: Request) {
     }
 
     if (apartmentId) {
-      // First create the user, then update the apartment
       residentData.apartmentId = apartmentId
     }
 

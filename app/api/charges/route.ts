@@ -9,17 +9,19 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'OWNER')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get admin's residence ID
-    const residenceId = session.user.residenceId
+    // OWNER sees all residences - no residence filter
+    // ADMIN sees only their assigned residence
+    let residenceFilter = {}
+    if (session.user.role === 'ADMIN' && session.user.residenceId) {
+      residenceFilter = { residenceId: session.user.residenceId }
+    }
 
     const charges = await prisma.charge.findMany({
-      where: {
-        residenceId
-      },
+      where: residenceFilter,
       include: {
         apartment: {
           include: {
@@ -77,10 +79,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const residenceId = session.user.residenceId
+    const adminResidenceId = session.user.residenceId
 
-    if (!residenceId) {
+    if (!adminResidenceId) {
       return NextResponse.json({ error: 'Residence not found' }, { status: 400 })
+    }
+
+    // Verify the apartment belongs to this admin's residence
+    const apartment = await prisma.apartment.findFirst({
+      where: {
+        id: apartmentId,
+        residenceId: adminResidenceId
+      }
+    })
+
+    if (!apartment) {
+      return NextResponse.json({ error: 'Apartment not found in your residence' }, { status: 403 })
     }
 
     // Calculate due date (end of the month)
@@ -94,7 +108,7 @@ export async function POST(request: Request) {
       year,
       description,
       dueDate,
-      residenceId,
+      residenceId: adminResidenceId,
       apartmentId
     }
 
