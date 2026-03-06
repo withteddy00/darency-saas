@@ -4,7 +4,21 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { 
+  Building2, 
+  Users, 
+  CreditCard, 
+  Wrench, 
+  TrendingUp,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  FileText,
+  Bell
+} from 'lucide-react'
+import { DashboardLayout, StatCard, SectionCard, ActivityList, QuickActionCard } from '@/components/dashboard'
 import { formatCurrency } from '@/lib/utils'
 
 export default function AdminDashboard({ params }: { params: { locale: string } }) {
@@ -36,153 +50,248 @@ export default function AdminDashboard({ params }: { params: { locale: string } 
     return null
   }
 
+  const t = {
+    fr: {
+      welcome: 'Bienvenue',
+      overview: 'Vue d\'ensemble',
+      apartments: 'Appartements',
+      residents: 'Résidents',
+      unpaidCharges: 'Charges impayées',
+      pendingRequests: 'Demandes en attente',
+      collectedPayments: 'Paiements collectés',
+      openRequests: 'Demandes ouvertes',
+      monthlyCollection: 'Taux de recouvrement',
+      recentActivity: 'Activité récente',
+      quickActions: 'Actions rapides',
+      viewAll: 'Voir tout',
+      pendingPayments: 'Paiements en attente',
+      maintenanceBoard: 'Tableau de maintenance',
+      announcements: 'Annonces',
+      documents: 'Documents',
+      recentActions: 'Actions récentes',
+      validatePayment: 'Valider paiement',
+      addResident: 'Ajouter résident',
+      createAnnouncement: 'Créer annonce',
+      viewDocuments: 'Voir documents',
+    },
+    ar: {
+      welcome: 'مرحباً',
+      overview: 'نظرة عامة',
+      apartments: 'الشقق',
+      residents: 'المقيمون',
+      unpaidCharges: 'الرسوم غير المدفوعة',
+      pendingRequests: 'الطلبات المعلقة',
+      collectedPayments: 'المدفوعات المحصلة',
+      openRequests: 'الطلبات المفتوحة',
+      monthlyCollection: 'معدل التحصيل',
+      recentActivity: 'النشاط الأخير',
+      quickActions: 'إجراءات سريعة',
+      viewAll: 'عرض الكل',
+      pendingPayments: 'المدفوعات المعلقة',
+      maintenanceBoard: 'لوحة الصيانة',
+      announcements: 'الإعلانات',
+      documents: 'المستندات',
+      recentActions: 'الإجراءات الأخيرة',
+      validatePayment: 'تحقق من الدفع',
+      addResident: 'إضافة مقيم',
+      createAnnouncement: 'إنشاء إعلان',
+      viewDocuments: 'عرض المستندات',
+    }
+  }
+
+  const translations = t[locale as 'fr' | 'ar'] || t.fr
+
+  // Mock data for demonstration
+  const stats = [
+    { title: translations.apartments, value: '12', change: '100% occupés', changeType: 'positive' as const, icon: Building2, iconColor: 'text-primary' },
+    { title: translations.residents, value: '28', change: '+5 ce mois', changeType: 'positive' as const, icon: Users, iconColor: 'text-secondary' },
+    { title: translations.unpaidCharges, value: formatCurrency(4500), change: '3 en retard', changeType: 'negative' as const, icon: CreditCard, iconColor: 'text-warning' },
+    { title: translations.pendingRequests, value: '5', change: '2 urgentes', changeType: 'negative' as const, icon: Wrench, iconColor: 'text-error' },
+  ]
+
+  const recentActivity = [
+    { id: '1', title: 'Paiement validé', description: '2 500 DH - Appartement 204', time: 'Il y a 1h', icon: CreditCard, iconColor: 'text-success' },
+    { id: '2', title: 'Nouveau résident', description: 'Youssef Amrani - Appartement 108', time: 'Il y a 3h', icon: Users, iconColor: 'text-primary' },
+    { id: '3', title: 'Demande de maintenance', description: 'Fuite d\'eau - Appartement 305', time: 'Il y a 5h', icon: Wrench, iconColor: 'text-warning' },
+    { id: '4', title: 'Charge mensuelle créée', description: 'Février 2026', time: 'Hier', icon: FileText, iconColor: 'text-secondary' },
+  ]
+
+  const pendingPayments = [
+    { id: '1', resident: 'Ahmed Benali', apartment: 'Appartement 102', amount: 2500, dueDate: '15/02/2026', status: 'overdue' as const },
+    { id: '2', resident: 'Fatima Zahra', apartment: 'Appartement 205', amount: 1800, dueDate: '20/02/2026', status: 'pending' as const },
+    { id: '3', resident: 'Mohamed El Amrani', apartment: 'Appartement 301', amount: 3200, dueDate: '25/02/2026', status: 'pending' as const },
+  ]
+
+  const maintenanceBoard = [
+    { id: '1', title: 'Fuite d\'eau dans la cuisine', apartment: 'Appartement 305', priority: 'high' as const, status: 'in_progress', date: 'Il y a 2h' },
+    { id: '2', title: 'Climatisation ne fonctionne pas', apartment: 'Appartement 108', priority: 'medium' as const, status: 'pending', date: 'Hier' },
+    { id: '3', title: 'Porte de garage cassée', apartment: 'Résidence', priority: 'high' as const, status: 'pending', date: 'Il y a 2 jours' },
+  ]
+
   return (
-    <div>
-      <div className="page-header">
+    <DashboardLayout locale={locale} role="ADMIN">
+      <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="page-title">
-              {locale === 'ar' ? 'لوحة تحكم المسؤول' : 'Dashboard Administrateur'}
+            <h1 className="text-2xl font-bold text-text-primary">
+              {translations.welcome}, {session.user.name} 👋
             </h1>
-            <p className="page-subtitle">
-              {locale === 'ar' 
-                ? `مرحباً، ${session.user.name}` 
-                : `Bienvenue, ${session.user.name}`}
-              👋
-            </p>
+            <p className="text-text-secondary mt-1">{translations.overview}</p>
           </div>
-          <div className="badge badge-info">
-            {locale === 'ar' ? 'مسؤول' : 'ADMINISTRATEUR'}
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 bg-secondary/10 text-secondary text-sm font-medium rounded-full">
+              ADMINISTRATEUR
+            </span>
           </div>
         </div>
-      </div>
 
-      {/* Residence Info */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg">
-            {locale === 'ar' ? 'معلومات العقار' : 'Information de la résidence'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-text-secondary">
-                {locale === 'ar' ? 'اسم العقار' : 'Nom de la résidence'}
-              </p>
-              <p className="font-medium">{session.user.residenceName || 'Résidence Al-Manar'}</p>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, index) => (
+            <StatCard key={index} {...stat} />
+          ))}
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Activity */}
+          <div className="lg:col-span-2">
+            <SectionCard 
+              title={translations.recentActivity}
+              action={
+                <Link href={`/${locale}/dashboard/requests`} className="text-sm text-primary hover:underline flex items-center gap-1">
+                  {translations.viewAll} <ArrowRight className="w-4 h-4" />
+                </Link>
+              }
+            >
+              <ActivityList items={recentActivity} />
+            </SectionCard>
+          </div>
+
+          {/* Pending Payments */}
+          <div>
+            <SectionCard 
+              title={translations.pendingPayments}
+              action={
+                <Link href={`/${locale}/dashboard/finances`} className="text-sm text-primary hover:underline flex items-center gap-1">
+                  {translations.viewAll} <ArrowRight className="w-4 h-4" />
+                </Link>
+              }
+            >
+              <div className="space-y-3">
+                {pendingPayments.map((payment) => (
+                  <div key={payment.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-elevated transition-colors">
+                    <div>
+                      <p className="font-medium text-text-primary">{payment.resident}</p>
+                      <p className="text-sm text-text-tertiary">{payment.apartment}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-text-primary">{formatCurrency(payment.amount)}</p>
+                      <p className={`text-xs ${payment.status === 'overdue' ? 'text-error' : 'text-warning'}`}>
+                        {payment.status === 'overdue' ? 'En retard' : 'En attente'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+          </div>
+        </div>
+
+        {/* Maintenance Board & Quick Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SectionCard 
+            title={translations.maintenanceBoard}
+            action={
+              <Link href={`/${locale}/dashboard/requests`} className="text-sm text-primary hover:underline flex items-center gap-1">
+                {translations.viewAll} <ArrowRight className="w-4 h-4" />
+              </Link>
+            }
+          >
+            <div className="space-y-4">
+              {maintenanceBoard.map((item) => (
+                <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors">
+                  <div className={`p-2 rounded-lg ${
+                    item.priority === 'high' ? 'bg-error/10 text-error' :
+                    item.priority === 'medium' ? 'bg-warning/10 text-warning' :
+                    'bg-surface-elevated text-text-tertiary'
+                  }`}>
+                    {item.priority === 'high' ? (
+                      <AlertCircle className="w-4 h-4" />
+                    ) : item.priority === 'medium' ? (
+                      <Clock className="w-4 h-4" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-text-primary">{item.title}</p>
+                    <p className="text-sm text-text-tertiary">{item.apartment} • {item.date}</p>
+                  </div>
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    item.status === 'in_progress' ? 'bg-primary/10 text-primary' :
+                    'bg-warning/10 text-warning'
+                  }`}>
+                    {item.status === 'in_progress' ? 'En cours' : 'En attente'}
+                  </span>
+                </div>
+              ))}
             </div>
-            <div>
-              <p className="text-sm text-text-secondary">
-                {locale === 'ar' ? 'المؤسسة' : 'Organisation'}
-              </p>
-              <p className="font-medium">{session.user.organizationName}</p>
+          </SectionCard>
+
+          <SectionCard title={translations.quickActions}>
+            <div className="grid grid-cols-2 gap-4">
+              <QuickActionCard
+                icon={DollarSign}
+                title={translations.validatePayment}
+                description="Valider un paiement"
+              />
+              <QuickActionCard
+                icon={Users}
+                title={translations.addResident}
+                description="Ajouter un résident"
+              />
+              <QuickActionCard
+                icon={Bell}
+                title={translations.createAnnouncement}
+                description="Publier une annonce"
+              />
+              <QuickActionCard
+                icon={FileText}
+                title={translations.viewDocuments}
+                description="Gérer les documents"
+              />
+            </div>
+          </SectionCard>
+        </div>
+
+        {/* Financial Summary */}
+        <SectionCard title={translations.collectedPayments}>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="p-4 bg-surface-elevated rounded-xl">
+              <p className="text-sm text-text-secondary">Ce mois</p>
+              <p className="text-2xl font-bold text-success mt-1">{formatCurrency(28500)}</p>
+              <p className="text-xs text-success mt-1">+12% vs mois dernier</p>
+            </div>
+            <div className="p-4 bg-surface-elevated rounded-xl">
+              <p className="text-sm text-text-secondary">En attente</p>
+              <p className="text-2xl font-bold text-warning mt-1">{formatCurrency(4500)}</p>
+              <p className="text-xs text-text-tertiary mt-1">3 paiements en retard</p>
+            </div>
+            <div className="p-4 bg-surface-elevated rounded-xl">
+              <p className="text-sm text-text-secondary">{translations.monthlyCollection}</p>
+              <p className="text-2xl font-bold text-primary mt-1">86%</p>
+              <p className="text-xs text-success mt-1">+5% vs mois dernier</p>
+            </div>
+            <div className="p-4 bg-surface-elevated rounded-xl">
+              <p className="text-sm text-text-secondary">Total annuel</p>
+              <p className="text-2xl font-bold text-text-primary mt-1">{formatCurrency(342000)}</p>
+              <p className="text-xs text-text-tertiary mt-1">Année 2026</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-text-secondary mb-1">
-              {locale === 'ar' ? 'الشقق' : 'Appartements'}
-            </p>
-            <p className="text-3xl font-bold text-text-primary">3</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-text-secondary mb-1">
-              {locale === 'ar' ? 'المقيمين' : 'Résidents'}
-            </p>
-            <p className="text-3xl font-bold text-text-primary">1</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-text-secondary mb-1">
-              {locale === 'ar' ? 'الطلبات المعلقة' : 'Demandes en attente'}
-            </p>
-            <p className="text-3xl font-bold text-warning">2</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-text-secondary mb-1">
-              {locale === 'ar' ? 'الإيرادات الشهرية' : 'Revenus mensuels'}
-            </p>
-            <p className="text-3xl font-bold text-primary">{formatCurrency(13000)}</p>
-          </CardContent>
-        </Card>
+        </SectionCard>
       </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {locale === 'ar' ? 'إجراءات سريعة' : 'Actions rapides'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Link
-              href={`/${locale}/admin/residents`}
-              className="flex flex-col items-center justify-center p-4 bg-surface-elevated rounded-xl hover:bg-primary-light/20 transition-colors group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-text-secondary group-hover:text-primary">
-                {locale === 'ar' ? 'المقيمون' : 'Résidents'}
-              </span>
-            </Link>
-            <Link
-              href={`/${locale}/admin/requests`}
-              className="flex flex-col items-center justify-center p-4 bg-surface-elevated rounded-xl hover:bg-primary-light/20 transition-colors group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-text-secondary group-hover:text-primary">
-                {locale === 'ar' ? 'الطلبات' : 'Demandes'}
-              </span>
-            </Link>
-            <Link
-              href={`/${locale}/admin/finances`}
-              className="flex flex-col items-center justify-center p-4 bg-surface-elevated rounded-xl hover:bg-primary-light/20 transition-colors group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-text-secondary group-hover:text-primary">
-                {locale === 'ar' ? 'المالية' : 'Finances'}
-              </span>
-            </Link>
-            <Link
-              href={`/${locale}/admin/settings`}
-              className="flex flex-col items-center justify-center p-4 bg-surface-elevated rounded-xl hover:bg-primary-light/20 transition-colors group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-text-secondary group-hover:text-primary">
-                {locale === 'ar' ? 'الإعدادات' : 'Paramètres'}
-              </span>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    </DashboardLayout>
   )
 }
