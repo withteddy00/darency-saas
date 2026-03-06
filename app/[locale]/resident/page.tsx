@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { 
   Building2, 
@@ -16,15 +16,38 @@ import {
   Bell,
   Home,
   DollarSign,
-  User
+  User,
+  Receipt
 } from 'lucide-react'
 import { DashboardLayout, StatCard, SectionCard, ActivityList, QuickActionCard } from '@/components/dashboard'
 import { formatCurrency } from '@/lib/utils'
+
+interface ResidentData {
+  charges: {
+    unpaid: number
+    paid: number
+    total: number
+  }
+  payments: {
+    total: number
+    latestPayment: {
+      amount: number
+      paidDate: string
+    } | null
+  }
+  maintenanceRequests: {
+    open: number
+    inProgress: number
+    completed: number
+  }
+}
 
 export default function ResidentDashboard({ params }: { params: { locale: string } }) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { locale } = params
+  const [residentData, setResidentData] = useState<ResidentData | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -38,7 +61,27 @@ export default function ResidentDashboard({ params }: { params: { locale: string
     }
   }, [status, session, router, locale])
 
-  if (status === 'loading') {
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'RESIDENT') {
+      fetchResidentData()
+    }
+  }, [status, session])
+
+  const fetchResidentData = async () => {
+    try {
+      const response = await fetch('/api/resident/dashboard')
+      if (response.ok) {
+        const data = await response.json()
+        setResidentData(data)
+      }
+    } catch (error) {
+      console.error('Error fetching resident data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -107,11 +150,12 @@ export default function ResidentDashboard({ params }: { params: { locale: string
 
   const translations = t[locale as 'fr' | 'ar'] || t.fr
 
-  // Mock data
+  // Real data from API
+  const unpaidAmount = residentData?.charges?.unpaid ?? 0
   const stats = [
-    { title: translations.monthlyRent, value: formatCurrency(3500), change: 'Dû le 28/02', changeType: 'neutral' as const, icon: Home, iconColor: 'text-primary' },
-    { title: translations.unpaidAmount, value: formatCurrency(0), change: translations.noUnpaid, changeType: 'positive' as const, icon: CreditCard, iconColor: 'text-success' },
-    { title: translations.openRequests, value: '1', change: 'En cours', changeType: 'neutral' as const, icon: Wrench, iconColor: 'text-warning' },
+    { title: translations.unpaidAmount, value: formatCurrency(unpaidAmount), change: unpaidAmount > 0 ? 'À payer' : translations.noUnpaid, changeType: unpaidAmount > 0 ? 'negative' as const : 'positive' as const, icon: CreditCard, iconColor: unpaidAmount > 0 ? 'text-warning' : 'text-success' },
+    { title: translations.latestPayment, value: residentData?.payments?.latestPayment ? formatCurrency(residentData.payments.latestPayment.amount) : '-', change: residentData?.payments?.latestPayment ? new Date(residentData.payments.latestPayment.paidDate).toLocaleDateString('fr-FR') : '-', changeType: 'neutral' as const, icon: Receipt, iconColor: 'text-success' },
+    { title: translations.openRequests, value: String(residentData?.maintenanceRequests?.open || 0), change: residentData?.maintenanceRequests?.inProgress ? `${residentData.maintenanceRequests.inProgress} en cours` : '-', changeType: 'neutral' as const, icon: Wrench, iconColor: 'text-warning' },
   ]
 
   const recentActivity = [

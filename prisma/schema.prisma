@@ -7,37 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// For PostgreSQL production, change provider to "postgresql" and set:
-// DATABASE_URL="postgresql://user:password@localhost:5432/darency"
-// Then uncomment the enum definitions below
-
-// PostgreSQL enums (use String for SQLite)
-// enum Role {
-//   OWNER
-//   ADMIN
-//   RESIDENT
-// }
-
-// enum RequestStatus {
-//   PENDING
-//   IN_PROGRESS
-//   COMPLETED
-//   CANCELLED
-// }
-
-// enum Priority {
-//   LOW
-//   MEDIUM
-//   HIGH
-//   URGENT
-// }
-
-// enum PaymentStatus {
-//   PENDING
-//   PAID
-//   OVERDUE
-// }
-
 // ============== MULTI-TENANT MODELS ==============
 
 // Organization (Tenant)
@@ -57,7 +26,7 @@ model Organization {
   residences Residence[]
 }
 
-// Residence (Building)
+// Residence (Building complex)
 model Residence {
   id          String   @id @default(cuid())
   name        String
@@ -77,6 +46,7 @@ model Residence {
   admins       Admin[]
   apartments   Apartment[]
   expenses     Expense[]
+  charges     Charge[]
   maintenanceRequests MaintenanceRequest[]
 
   // For ADMIN users who manage this residence
@@ -130,6 +100,8 @@ model Apartment {
   number      String   // Apartment number (e.g., "A12", "B4")
   floor       Int?
   building    String?  // Building block (A, B, C)
+  type        String   @default("T2") // T1, T2, T3, T4, Studio
+  status      String   @default("VACANT") // OCCUPIED, VACANT
   area        Float?   // Size in sqm
   bedrooms    Int      @default(1)
   bathrooms   Int      @default(1)
@@ -143,7 +115,50 @@ model Apartment {
 
   residentUser User? @relation("ResidentApartment")
   payments     Payment[]
+  charges     Charge[]
   maintenanceRequests MaintenanceRequest[]
+
+  @@unique([residenceId, number])
+}
+
+// Charge (monthly charges for an apartment)
+model Charge {
+  id          String   @id @default(cuid())
+  title       String
+  category    String   // WATER, ELECTRICITY, ELEVATOR, CLEANING, SECURITY, OTHER
+  amount      Float
+  month       Int      // 1-12
+  year        Int
+  description String?
+  dueDate     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  residenceId String
+  residence   Residence @relation(fields: [residenceId], references: [id])
+  apartmentId String
+  apartment   Apartment @relation(fields: [apartmentId], references: [id])
+  payments    Payment[]
+}
+
+// Payment
+model Payment {
+  id        String   @id @default(cuid())
+  amount    Float
+  status    String   @default("PENDING") // PENDING, PAID, OVERDUE
+  method    String?  // CASH, CARD, TRANSFER, CHEQUE
+  dueDate   DateTime
+  paidDate  DateTime?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  apartmentId String
+  apartment   Apartment @relation(fields: [apartmentId], references: [id])
+  chargeId    String
+  charge      Charge   @relation(fields: [chargeId], references: [id])
 }
 
 // Expense
@@ -161,22 +176,6 @@ model Expense {
   residence   Residence @relation(fields: [residenceId], references: [id])
 }
 
-// Payment
-model Payment {
-  id        String   @id @default(cuid())
-  amount    Float
-  month     Int
-  year      Int
-  status    String   @default("PENDING") // PENDING, PAID, OVERDUE
-  dueDate   DateTime
-  paidDate  DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  apartmentId String
-  apartment   Apartment @relation(fields: [apartmentId], references: [id])
-}
-
 // Maintenance Request
 model MaintenanceRequest {
   id          String   @id @default(cuid())
@@ -184,6 +183,7 @@ model MaintenanceRequest {
   description String
   status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
   priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  category    String?  // PLUMBING, ELECTRICAL, ELEVATOR, HVAC, OTHER
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   resolvedAt  DateTime?
