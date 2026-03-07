@@ -150,28 +150,36 @@ export default function OwnerReportsPage({ params }: { params: { locale: string 
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      <DashboardLayout locale={locale} role="OWNER">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
     )
   }
 
   if (!session || session.user.role !== 'OWNER') {
-    return null
+    return (
+      <DashboardLayout locale={locale} role="OWNER">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-text-secondary">Unauthorized</p>
+        </div>
+      </DashboardLayout>
+    )
   }
 
   const summary = reportData?.summary
 
   return (
-    <div className={locale === 'ar' ? 'rtl' : 'ltr'}>
-      <div className="page-header">
+    <DashboardLayout locale={locale} role="OWNER">
+      <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="page-title">{t.title}</h1>
-            <p className="page-subtitle">{t.subtitle}</p>
+            <h1 className="text-2xl font-bold text-text-primary">{t.title}</h1>
+            <p className="text-text-secondary mt-1">{t.subtitle}</p>
           </div>
         </div>
-      </div>
+        </div>
 
       {!reportData || !summary ? (
         <Card>
@@ -298,6 +306,6 @@ export default function OwnerReportsPage({ params }: { params: { locale: string 
           </div>
         </>
       )}
-    </div>
+    </DashboardLayout>
   )
 }
