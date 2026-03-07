@@ -214,10 +214,8 @@ export default function ResidentDashboard({ params }: { params: { locale: string
     priority: r.priority.toLowerCase() as 'low' | 'medium' | 'high' | 'urgent'
   }))
 
-  const announcements = [
-    { id: '1', title: 'Maintenance préventive', date: '15/02/2026', content: 'La maintenance des ascenseurs aura lieu...' },
-    { id: '2', title: 'Réunion des résidents', date: '01/02/2026', content: 'Une réunion aura lieu le...' },
-  ]
+  // No announcements from API yet - show empty state when no data
+  const announcements: Array<{id: string, title: string, date: string, content: string}> = []
 
   return (
     <DashboardLayout locale={locale} role="RESIDENT">
