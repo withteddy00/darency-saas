@@ -57,6 +57,14 @@ export async function GET() {
       .sort((a, b) => new Date(b.paidDate!).getTime() - new Date(a.paidDate!).getTime())[0]
 
     return NextResponse.json({
+      apartment: user.apartment ? {
+        id: user.apartment.id,
+        number: user.apartment.number,
+        building: user.apartment.building,
+        floor: user.apartment.floor,
+        type: user.apartment.type,
+        area: user.apartment.area
+      } : null,
       charges: {
         unpaid: unpaidTotal,
         paid: paidTotal,
@@ -67,12 +75,25 @@ export async function GET() {
         latestPayment: latestPayment ? {
           amount: latestPayment.amount,
           paidDate: latestPayment.paidDate!.toISOString()
-        } : null
+        } : null,
+        recent: payments.slice(0, 5).map(p => ({
+          id: p.id,
+          amount: p.amount,
+          status: p.status,
+          paidDate: p.paidDate?.toISOString()
+        }))
       },
       maintenanceRequests: {
         open: maintenanceRequests.filter(r => r.status === 'PENDING').length,
         inProgress: maintenanceRequests.filter(r => r.status === 'IN_PROGRESS').length,
-        completed: maintenanceRequests.filter(r => r.status === 'COMPLETED').length
+        completed: maintenanceRequests.filter(r => r.status === 'COMPLETED').length,
+        recent: maintenanceRequests.slice(0, 5).map(r => ({
+          id: r.id,
+          title: r.title,
+          status: r.status,
+          priority: r.priority,
+          createdAt: r.createdAt.toISOString()
+        }))
       }
     })
   } catch (error) {

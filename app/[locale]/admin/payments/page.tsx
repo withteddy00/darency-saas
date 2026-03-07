@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/hooks/use-translations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CreditCard, DollarSign, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { DashboardLayout } from '@/components/dashboard'
 
 export default function PaymentsPage({ params }: { params: { locale: string } }) {
   const { locale } = params
@@ -68,20 +69,24 @@ export default function PaymentsPage({ params }: { params: { locale: string } })
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      <DashboardLayout locale={locale} role="ADMIN">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-error mx-auto mb-4" />
-          <p className="text-error">{error}</p>
+      <DashboardLayout locale={locale} role="ADMIN">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-error mx-auto mb-4" />
+            <p className="text-error">{error}</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     )
   }
 

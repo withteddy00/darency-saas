@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/hooks/use-translations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { DashboardLayout } from '@/components/dashboard'
 import { Building2, Users, Plus, Home, DoorOpen, AlertCircle } from 'lucide-react'
 
 export default function ApartmentsPage({ params }: { params: { locale: string } }) {

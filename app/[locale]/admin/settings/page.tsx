@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from '@/hooks/use-translations'
+import { DashboardLayout } from '@/components/dashboard'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,11 +20,13 @@ export default function SettingsPage({ params }: { params: { locale: string } })
   ]
 
   return (
-    <div>
-      <div className="page-header">
-        <h1 className="page-title">{t('settings.title')}</h1>
-        <p className="page-subtitle">{t('nav.profile')}</p>
-      </div>
+    <DashboardLayout locale={locale} role="ADMIN">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">{t('settings.title')}</h1>
+          <p className="text-text-secondary mt-1">{t('nav.profile')}</p>
+        </div>
 
       <div className="grid lg:grid-cols-4 gap-6">
         {/* Sidebar */}
@@ -165,7 +168,9 @@ export default function SettingsPage({ params }: { params: { locale: string } })
           )}
         </div>
       </div>
-    </div>
+    
+      </div>
+    </DashboardLayout>
   )
 }
 

@@ -23,6 +23,14 @@ import { DashboardLayout, StatCard, SectionCard, ActivityList, QuickActionCard }
 import { formatCurrency } from '@/lib/utils'
 
 interface ResidentData {
+  apartment: {
+    id: string
+    number: string
+    building?: string
+    floor?: number
+    type?: string
+    area?: number
+  } | null
   charges: {
     unpaid: number
     paid: number
@@ -34,11 +42,24 @@ interface ResidentData {
       amount: number
       paidDate: string
     } | null
+    recent: Array<{
+      id: string
+      amount: number
+      status: string
+      paidDate?: string
+    }>
   }
   maintenanceRequests: {
     open: number
     inProgress: number
     completed: number
+    recent: Array<{
+      id: string
+      title: string
+      status: string
+      priority: string
+      createdAt: string
+    }>
   }
 }
 
@@ -158,27 +179,43 @@ export default function ResidentDashboard({ params }: { params: { locale: string
     { title: translations.openRequests, value: String(residentData?.maintenanceRequests?.open || 0), change: residentData?.maintenanceRequests?.inProgress ? `${residentData.maintenanceRequests.inProgress} en cours` : '-', changeType: 'neutral' as const, icon: Wrench, iconColor: 'text-warning' },
   ]
 
-  const recentActivity = [
-    { id: '1', title: 'Paiement effectué', description: '3 500 DH - Janvier 2026', time: 'Il y a 5 jours', icon: CreditCard, iconColor: 'text-success' },
-    { id: '2', title: 'Demande de maintenance', description: 'Réparation climatisation', time: 'Il y a 1 semaine', icon: Wrench, iconColor: 'text-warning' },
-    { id: '3', title: 'Annonce publiée', description: 'Maintenance préventive', time: 'Il y a 2 semaines', icon: Bell, iconColor: 'text-primary' },
-  ]
+  // Build recent activity from real data
+  const recentActivity: Array<{id: string, title: string, description: string, time: string, icon: any, iconColor: string}> = []
 
-  const paymentHistory = [
-    { id: '1', month: 'Janvier 2026', amount: 3500, status: 'paid' as const, date: '25/01/2026' },
-    { id: '2', month: 'Décembre 2025', amount: 3500, status: 'paid' as const, date: '28/12/2025' },
-    { id: '3', month: 'Novembre 2025', amount: 3500, status: 'paid' as const, date: '27/11/2025' },
-  ]
+  // Add payment activity
+  if (residentData?.payments?.latestPayment) {
+    recentActivity.push({
+      id: 'payment-1',
+      title: 'Paiement effectué',
+      description: formatCurrency(residentData.payments.latestPayment.amount),
+      time: new Date(residentData.payments.latestPayment.paidDate).toLocaleDateString('fr-FR'),
+      icon: CreditCard,
+      iconColor: 'text-success'
+    })
+  }
 
-  const maintenanceRequests = [
-    { id: '1', title: 'Climatisation ne fonctionne pas', date: 'Il y a 3 jours', status: 'in_progress', priority: 'high' as const },
-    { id: '2', title: 'Fuite dans la salle de bain', date: 'Il y a 2 semaines', status: 'completed', priority: 'medium' as const },
-  ]
+  // Add announcement activity (from dashboard data if available)
 
-  const announcements = [
-    { id: '1', title: 'Maintenance préventive', date: '15/02/2026', content: 'La maintenance des ascenseurs aura lieu...' },
-    { id: '2', title: 'Réunion des résidents', date: '01/02/2026', content: 'Une réunion aura lieu le...' },
-  ]
+  // Build payment history from real data
+  const paymentHistory = (residentData?.payments?.recent || []).map((p) => ({
+    id: p.id,
+    month: p.paidDate ? new Date(p.paidDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : '-',
+    amount: p.amount,
+    status: p.status.toLowerCase() as 'paid' | 'pending' | 'overdue',
+    date: p.paidDate ? new Date(p.paidDate).toLocaleDateString('fr-FR') : '-'
+  }))
+
+  // Build maintenance requests from real data
+  const maintenanceRequests = (residentData?.maintenanceRequests?.recent || []).map((r) => ({
+    id: r.id,
+    title: r.title,
+    date: new Date(r.createdAt).toLocaleDateString('fr-FR'),
+    status: r.status.toLowerCase() as 'pending' | 'in_progress' | 'completed',
+    priority: r.priority.toLowerCase() as 'low' | 'medium' | 'high' | 'urgent'
+  }))
+
+  // No announcements from API yet - show empty state when no data
+  const announcements: Array<{id: string, title: string, date: string, content: string}> = []
 
   return (
     <DashboardLayout locale={locale} role="RESIDENT">
@@ -204,8 +241,19 @@ export default function ResidentDashboard({ params }: { params: { locale: string
             <div>
               <p className="text-white/80 text-sm">{translations.myApartment}</p>
               <p className="text-2xl font-bold mt-1">
-                {session.user.apartmentNumber || 'A1'} - {session.user.residenceName || 'Résidence Al-Manar'}
+                {residentData?.apartment?.number 
+                  ? `${residentData.apartment.number}${residentData.apartment.building ? ` - ${residentData.apartment.building}` : ''}`
+                  : session.user.apartmentNumber || 'A1'}
+                {' - '}
+                {session.user.residenceName || 'Résidence'}
               </p>
+              {residentData?.apartment && (
+                <p className="text-white/60 text-sm mt-1">
+                  {residentData.apartment.floor ? `Étage ${residentData.apartment.floor} • ` : ''}
+                  {residentData.apartment.type || 'Appartement'}
+                  {residentData.apartment.area ? ` • ${residentData.apartment.area}m²` : ''}
+                </p>
+              )}
             </div>
             <div className="w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center">
               <Building2 className="w-8 h-8" />
