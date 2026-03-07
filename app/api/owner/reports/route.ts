@@ -163,13 +163,16 @@ export async function GET() {
 
     return NextResponse.json({
       summary: {
+        totalResidences: residences.length,
         totalApartments,
         occupiedApartments,
         vacantApartments,
         occupancyRate,
         totalRevenue,
         totalExpenses,
-        profit
+        profit,
+        totalResidents: 0, // TODO: add resident count
+        openRequests: 0 // TODO: add request count
       },
       monthlyData,
       residenceBreakdown,
