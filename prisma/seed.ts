@@ -975,3 +975,12 @@ async function main() {
   console.log('  Total: 20 apartments, 13 residents, 2 admins, 2 owners')
   console.log('  Charges, expenses, payments, and maintenance requests included')
 }
+
+main()
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
