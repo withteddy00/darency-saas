@@ -158,11 +158,28 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
     revenue: r.revenue
   })) : []
 
-  const pendingTasks = [
-    { id: '1', title: 'Valider le paiement de 2 500 DH', type: 'payment', priority: 'high' as const },
-    { id: '2', title: 'Approuver la demande de maintenance #124', type: 'maintenance', priority: 'medium' as const },
-    { id: '3', title: 'Mettre à jour les charges mensuelles', type: 'charge', priority: 'low' as const },
-  ]
+  // Build pending tasks from real data
+  const pendingTasks: Array<{id: string, title: string, type: string, priority: 'low' | 'medium' | 'high'}> = []
+
+  // Add unpaid charges as pending tasks
+  if (dashboardData?.stats?.unpaidCharges > 0) {
+    pendingTasks.push({
+      id: 'task-unpaid',
+      title: `Suivre les charges impayées: ${formatCurrency(dashboardData.stats.unpaidCharges)}`,
+      type: 'payment',
+      priority: 'high'
+    })
+  }
+
+  // Add open maintenance requests as pending tasks
+  if (dashboardData?.stats?.openMaintenanceRequests > 0) {
+    pendingTasks.push({
+      id: 'task-maintenance',
+      title: `${dashboardData.stats.openMaintenanceRequests} demande(s) de maintenance en attente`,
+      type: 'maintenance',
+      priority: 'medium'
+    })
+  }
 
   return (
     <DashboardLayout locale={locale} role="OWNER">
