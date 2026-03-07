@@ -13,7 +13,9 @@ import {
   ArrowRight,
   AlertCircle,
   CheckCircle2,
-  Clock
+  Clock,
+  Home,
+  DollarSign
 } from 'lucide-react'
 import { DashboardLayout, StatCard, SectionCard, ActivityList, QuickActionCard } from '@/components/dashboard'
 import { formatCurrency } from '@/lib/utils'
@@ -76,9 +78,10 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
       totalResidences: 'Résidences',
       totalAdmins: 'Administrateurs',
       totalResidents: 'Résidents',
+      totalApartments: 'Appartements',
+      occupancyRate: 'Taux d\'occupation',
       unpaidCharges: 'Charges impayées',
       maintenanceRequests: 'Demandes de maintenance',
-      occupancyRate: 'Taux d\'occupation',
       monthlyRevenue: 'Revenus mensuels',
       recentActivity: 'Activité récente',
       quickActions: 'Actions rapides',
@@ -101,9 +104,10 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
       totalResidences: 'العقارات',
       totalAdmins: 'المسؤولون',
       totalResidents: 'المقيمون',
+      totalApartments: 'الشقق',
+      occupancyRate: 'معدل الإشغال',
       unpaidCharges: 'الرسوم غير المدفوعة',
       maintenanceRequests: 'طلبات الصيانة',
-      occupancyRate: 'معدل الإشغال',
       monthlyRevenue: 'الإيرادات الشهرية',
       recentActivity: 'النشاط الأخير',
       quickActions: 'إجراءات سريعة',
@@ -127,9 +131,9 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
   // Use real data from API
   const stats = dashboardData ? [
     { title: translations.totalResidences, value: String(dashboardData.stats.totalResidences), change: '', changeType: 'neutral' as const, icon: Building2, iconColor: 'text-primary' },
-    { title: translations.totalAdmins, value: String(dashboardData.stats.totalAdmins), change: '', changeType: 'neutral' as const, icon: Users, iconColor: 'text-secondary' },
+    { title: translations.totalApartments, value: String(dashboardData.stats.totalApartments), change: '', changeType: 'neutral' as const, icon: Home, iconColor: 'text-secondary' },
     { title: translations.totalResidents, value: String(dashboardData.stats.totalResidents), change: '', changeType: 'neutral' as const, icon: Users, iconColor: 'text-accent' },
-    { title: translations.unpaidCharges, value: formatCurrency(dashboardData.stats.unpaidCharges), change: `${dashboardData.stats.openMaintenanceRequests} en attente`, changeType: 'negative' as const, icon: CreditCard, iconColor: 'text-warning' },
+    { title: translations.occupancyRate, value: `${dashboardData.stats.occupancyRate}%`, change: '', changeType: 'neutral' as const, icon: TrendingUp, iconColor: 'text-success' },
   ] : []
 
   const recentActivity = dashboardData ? [
@@ -181,6 +185,14 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
     })
   }
 
+  // Calculate financial summary from dashboard data
+  const financialSummary = dashboardData ? {
+    revenue: dashboardData.topResidences.reduce((sum: number, r: any) => sum + r.revenue, 0),
+    expenses: dashboardData.stats.unpaidCharges || 0,
+    netIncome: dashboardData.topResidences.reduce((sum: number, r: any) => sum + r.revenue, 0) - (dashboardData.stats.unpaidCharges || 0),
+    unpaidCharges: dashboardData.stats.unpaidCharges
+  } : { revenue: 0, expenses: 0, netIncome: 0, unpaidCharges: 0 }
+
   return (
     <DashboardLayout locale={locale} role="OWNER">
       <div className="space-y-6">
@@ -226,27 +238,36 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
           <div>
             <SectionCard title={translations.pendingTasks}>
               <div className="space-y-3">
-                {pendingTasks.map((task) => (
-                  <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors">
-                    <div className={`p-2 rounded-lg ${
-                      task.priority === 'high' ? 'bg-error/10 text-error' :
-                      task.priority === 'medium' ? 'bg-warning/10 text-warning' :
-                      'bg-surface-elevated text-text-tertiary'
-                    }`}>
-                      {task.priority === 'high' ? (
-                        <AlertCircle className="w-4 h-4" />
-                      ) : task.priority === 'medium' ? (
-                        <Clock className="w-4 h-4" />
-                      ) : (
-                        <CheckCircle2 className="w-4 h-4" />
-                      )}
+                {pendingTasks.length > 0 ? (
+                  pendingTasks.map((task) => (
+                    <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-elevated transition-colors">
+                      <div className={`p-2 rounded-lg ${
+                        task.priority === 'high' ? 'bg-error/10 text-error' :
+                        task.priority === 'medium' ? 'bg-warning/10 text-warning' :
+                        'bg-surface-elevated text-text-tertiary'
+                      }`}>
+                        {task.priority === 'high' ? (
+                          <AlertCircle className="w-4 h-4" />
+                        ) : task.priority === 'medium' ? (
+                          <Clock className="w-4 h-4" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-text-primary">{task.title}</p>
+                        <p className="text-xs text-text-tertiary mt-0.5 capitalize">{task.type}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-text-primary">{task.title}</p>
-                      <p className="text-xs text-text-tertiary mt-0.5 capitalize">{task.type}</p>
+                  ))
+                ) : (
+                  <div className="flex items-center gap-3 p-3 rounded-lg">
+                    <div className="p-2 rounded-lg bg-success/10 text-success">
+                      <CheckCircle2 className="w-4 h-4" />
                     </div>
+                    <p className="text-sm text-text-secondary">Aucune tâche en attente</p>
                   </div>
-                ))}
+                )}
               </div>
             </SectionCard>
           </div>
@@ -263,48 +284,63 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
             }
           >
             <div className="space-y-4">
-              {topResidences.map((residence: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-elevated transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-primary" />
+              {topResidences.length > 0 ? (
+                topResidences.map((residence: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-elevated transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Building2 className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-text-primary">{residence.name}</p>
+                        <p className="text-sm text-text-tertiary">{residence.units} unités</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-text-primary">{residence.name}</p>
-                      <p className="text-sm text-text-tertiary">{residence.units} unités</p>
+                    <div className="text-right">
+                      <p className="font-semibold text-text-primary">{formatCurrency(residence.revenue)}</p>
+                      <p className="text-sm text-success">{residence.occupancy}% occupation</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-text-primary">{formatCurrency(residence.revenue)}</p>
-                    <p className="text-sm text-success">{residence.occupancy}% occupation</p>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-text-secondary">
+                  <Building2 className="w-12 h-12 mx-auto mb-2 text-text-tertiary" />
+                  <p>Aucune résidence trouvée</p>
                 </div>
-              ))}
+              )}
             </div>
           </SectionCard>
 
           <SectionCard title={translations.quickActions}>
             <div className="grid grid-cols-2 gap-4">
-              <QuickActionCard
-                icon={Building2}
-                title={translations.addResidence}
-                description="Ajouter une nouvelle propriété"
-              />
-              <QuickActionCard
-                icon={Users}
-                title={translations.manageUsers}
-                description="Gérer les utilisateurs"
-              />
-              <QuickActionCard
-                icon={TrendingUp}
-                title={translations.viewReports}
-                description="Voir les statistiques"
-              />
-              <QuickActionCard
-                icon={Wrench}
-                title={translations.settings}
-                description="Configurer le compte"
-              />
+              <Link href={`/${locale}/owner/residences`} className="block">
+                <QuickActionCard
+                  icon={Building2}
+                  title={translations.addResidence}
+                  description="Ajouter une nouvelle propriété"
+                />
+              </Link>
+              <Link href={`/${locale}/owner/users`} className="block">
+                <QuickActionCard
+                  icon={Users}
+                  title={translations.manageUsers}
+                  description="Gérer les utilisateurs"
+                />
+              </Link>
+              <Link href={`/${locale}/owner/reports`} className="block">
+                <QuickActionCard
+                  icon={TrendingUp}
+                  title={translations.viewReports}
+                  description="Voir les statistiques"
+                />
+              </Link>
+              <Link href={`/${locale}/owner/settings`} className="block">
+                <QuickActionCard
+                  icon={Wrench}
+                  title={translations.settings}
+                  description="Configurer le compte"
+                />
+              </Link>
             </div>
           </SectionCard>
         </div>
@@ -314,19 +350,19 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="p-4 bg-surface-elevated rounded-xl">
               <p className="text-sm text-text-secondary">{translations.revenue}</p>
-              <p className="text-2xl font-bold text-success mt-1">{formatCurrency(36000)}</p>
+              <p className="text-2xl font-bold text-success mt-1">{formatCurrency(financialSummary.revenue)}</p>
             </div>
             <div className="p-4 bg-surface-elevated rounded-xl">
               <p className="text-sm text-text-secondary">{translations.expenses}</p>
-              <p className="text-2xl font-bold text-error mt-1">{formatCurrency(8500)}</p>
+              <p className="text-2xl font-bold text-error mt-1">{formatCurrency(financialSummary.expenses)}</p>
             </div>
             <div className="p-4 bg-surface-elevated rounded-xl">
               <p className="text-sm text-text-secondary">{translations.netIncome}</p>
-              <p className="text-2xl font-bold text-primary mt-1">{formatCurrency(27500)}</p>
+              <p className="text-2xl font-bold text-primary mt-1">{formatCurrency(financialSummary.netIncome)}</p>
             </div>
             <div className="p-4 bg-surface-elevated rounded-xl">
               <p className="text-sm text-text-secondary">{translations.unpaidCharges}</p>
-              <p className="text-2xl font-bold text-warning mt-1">{formatCurrency(4500)}</p>
+              <p className="text-2xl font-bold text-warning mt-1">{formatCurrency(financialSummary.unpaidCharges)}</p>
             </div>
           </div>
         </SectionCard>

@@ -162,6 +162,22 @@ export async function GET() {
       }
     })
 
+    // Get resident count
+    const totalResidents = await prisma.user.count({
+      where: { 
+        role: 'RESIDENT',
+        organizationId 
+      }
+    })
+
+    // Get open maintenance requests count
+    const openRequests = await prisma.maintenanceRequest.count({
+      where: {
+        residence: { organizationId },
+        status: { notIn: ['COMPLETED', 'CANCELLED'] }
+      }
+    })
+
     return NextResponse.json({
       summary: {
         totalResidences: residences.length,
@@ -172,8 +188,8 @@ export async function GET() {
         totalRevenue,
         totalExpenses,
         profit,
-        totalResidents: 0, // TODO: add resident count
-        openRequests: 0 // TODO: add request count
+        totalResidents,
+        openRequests
       },
       monthlyData,
       residenceBreakdown,
