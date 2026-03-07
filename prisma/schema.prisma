@@ -49,6 +49,9 @@ model SubscriptionPlan {
   isActive      Boolean @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Relations
+  subscriptionRequests SubscriptionRequest[]
 }
 
 // Residence (Building complex)
@@ -276,4 +279,46 @@ model MaintenanceRequest {
   apartment   Apartment @relation(fields: [apartmentId], references: [id])
   reportedById String
   reportedBy  User       @relation(fields: [reportedById], references: [id])
+}
+
+// Subscription Request - tracks subscription requests from potential clients
+model SubscriptionRequest {
+  id              String   @id @default(cuid())
+  // Client Information
+  firstName       String
+  lastName        String
+  email           String
+  phone           String
+  // Residence Information
+  residenceName   String
+  residenceAddress String
+  city            String
+  numberOfApartments Int
+  // Plan Selection
+  planId          String
+  plan            SubscriptionPlan @relation(fields: [planId], references: [id])
+  // Request Status
+  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED, EXPIRED
+  adminNotes      String?
+  // Account Creation (when approved)
+  password        String?  // Generated temporary password
+  activatedAt     DateTime?
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  expiresAt       DateTime? // Request expires if not approved within 30 days
+
+  // History for traceability
+  history         SubscriptionRequestHistory[]
+}
+
+// Subscription Request History - tracks all changes for traceability
+model SubscriptionRequestHistory {
+  id              String   @id @default(cuid())
+  subscriptionRequestId String
+  subscriptionRequest SubscriptionRequest @relation(fields: [subscriptionRequestId], references: [id], onDelete: Cascade)
+  action          String   // CREATED, VIEWED, APPROVED, REJECTED, PASSWORD_SENT, ACTIVATED
+  description     String
+  performedBy     String?  // Who performed the action (admin email or system)
+  createdAt       DateTime @default(now())
 }

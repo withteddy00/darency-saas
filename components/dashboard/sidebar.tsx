@@ -19,7 +19,8 @@ import {
   FileText,
   Receipt,
   DollarSign,
-  ClipboardList
+  ClipboardList,
+  CheckCircle2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -41,6 +42,8 @@ const ownerNavItems: NavItem[] = [
   { href: '/owner/residences', label: 'Residences', icon: Building2 },
   { href: '/owner/users', label: 'Users', icon: Users },
   { href: '/owner/reports', label: 'Reports', icon: FileBarChart },
+  { href: '/owner/plan', label: 'Plans', icon: CreditCard },
+  { href: '/owner/abonnements', label: 'Abonnements', icon: CheckCircle2 },
   { href: '/owner/settings', label: 'Settings', icon: Settings },
 ]
 
