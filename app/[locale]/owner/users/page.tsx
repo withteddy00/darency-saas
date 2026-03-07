@@ -17,8 +17,8 @@ interface User {
   email: string
   phone?: string
   role: string
-  apartment?: { number: string; building?: string; residence?: string }
-  residence?: string
+  apartment?: { number?: string; building?: string; residence?: string } | null
+  residence?: string | null
   createdAt: string
 }
 
@@ -401,8 +401,8 @@ export default function OwnerUsersPage({ params }: { params: { locale: string } 
                         </span>
                       </td>
                       <td className="px-4 py-3 text-text-secondary">
-                        {user.apartment 
-                          ? `${user.apartment.number}${user.apartment.building ? ` (${user.apartment.building})` : ''}`
+                        {user.apartment && typeof user.apartment === 'object'
+                          ? `${user.apartment.number || ''}${user.apartment.building ? ` (${user.apartment.building})` : ''}`
                           : user.residence || t.noResidence}
                       </td>
                       <td className="px-4 py-3 text-text-secondary text-sm">
