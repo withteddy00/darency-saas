@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DashboardLayout } from '@/components/dashboard'
 import { User, Building2, Shield, Bell, Save, Lock, Mail, Phone } from 'lucide-react'
 
 export default function OwnerSettingsPage({ params }: { params: { locale: string } }) {
@@ -143,9 +144,11 @@ export default function OwnerSettingsPage({ params }: { params: { locale: string
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      <DashboardLayout locale={locale} role="OWNER">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
     )
   }
 
@@ -159,12 +162,13 @@ export default function OwnerSettingsPage({ params }: { params: { locale: string
     { id: 'security', label: t.security, icon: Shield },
   ]
 
-  return (
-    <div className={locale === 'ar' ? 'rtl' : 'ltr'}>
-      <div className="page-header">
-        <h1 className="page-title">{t.title}</h1>
-        <p className="page-subtitle">{t.subtitle}</p>
-      </div>
+    return (
+      <DashboardLayout locale={locale} role="OWNER">
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold text-text-primary">{t.title}</h1>
+            <p className="text-text-secondary mt-1">{t.subtitle}</p>
+          </div>
 
       {successMessage && (
         <div className="mb-6 p-4 bg-success/10 text-success rounded-lg border border-success/20">
@@ -357,6 +361,7 @@ export default function OwnerSettingsPage({ params }: { params: { locale: string
           )}
         </div>
       </div>
-    </div>
-  )
+        </div>
+      </DashboardLayout>
+    )
 }

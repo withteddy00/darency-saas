@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DashboardLayout } from '@/components/dashboard'
 import { 
   Building2, MapPin, Users, Home, AlertCircle, CheckCircle2, 
   Clock, Search, Filter, Plus, X, ChevronDown, ChevronRight
@@ -285,9 +286,11 @@ export default function OwnerResidencesPage({ params }: { params: { locale: stri
 
   if (status === 'loading' || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      <DashboardLayout locale={locale} role="OWNER">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
     )
   }
 
@@ -296,15 +299,15 @@ export default function OwnerResidencesPage({ params }: { params: { locale: stri
   }
 
   return (
-    <div className={locale === 'ar' ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="page-header">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <DashboardLayout locale={locale} role="OWNER">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="page-title">{t.title}</h1>
-            <p className="page-subtitle">{t.subtitle}</p>
+            <h1 className="text-2xl font-bold text-text-primary">{t.title}</h1>
+            <p className="text-text-secondary mt-1">{t.subtitle}</p>
           </div>
-          <Button onClick={() => setIsModalOpen(true)} className="shrink-0">
+          <Button onClick={() => setIsModalOpen(true)}>
             <Plus className="w-5 h-5 ltr:mr-2 rtl:ml-2" />
             {t.addResidence}
           </Button>
@@ -617,6 +620,6 @@ export default function OwnerResidencesPage({ params }: { params: { locale: stri
           </Card>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   )
 }

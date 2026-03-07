@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { DashboardLayout } from '@/components/dashboard'
 import { Input } from '@/components/ui/input'
 import { 
   Users, Plus, X, Search, Filter, Mail, Phone, Building2,

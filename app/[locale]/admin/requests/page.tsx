@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/hooks/use-translations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { DashboardLayout } from '@/components/dashboard'
 import { Plus as PlusIconLucide, AlertCircle } from 'lucide-react'
 
 export default function RequestsPage({ params }: { params: { locale: string } }) {

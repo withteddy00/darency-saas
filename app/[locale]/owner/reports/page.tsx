@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { DashboardLayout } from '@/components/dashboard'
 import { formatCurrency } from '@/lib/utils'
 import { 
   TrendingUp, TrendingDown, DollarSign, Home, Users, Building2,
