@@ -1,9 +1,8 @@
+export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { PrismaClient } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
@@ -13,76 +12,182 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get the user's apartment
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: {
-        apartment: true
+        apartment: {
+          include: {
+            residence: true
+          }
+        }
       }
     })
 
     if (!user || !user.apartmentId) {
       return NextResponse.json({ 
-        charges: { unpaid: 0, paid: 0, total: 0 },
-        payments: { total: 0, latestPayment: null },
-        maintenanceRequests: { open: 0, inProgress: 0, completed: 0 }
+        apartment: null,
+        residence: null,
+        charges: { unpaid: 0, paid: 0, total: 0, pendingPayments: [], paidPayments: [] },
+        payments: { total: 0, latestPayment: null, recent: [] },
+        maintenanceRequests: { open: 0, inProgress: 0, completed: 0, recent: [] },
+        announcements: [],
+        documents: [],
+        monthlyPayments: []
       })
     }
 
-    // Get charges for this apartment
+    const apartment = user.apartment!
+    const residence = apartment.residence
+
+    // Get all charges for this apartment with payment status
     const charges = await prisma.charge.findMany({
-      where: { apartmentId: user.apartmentId }
+      where: { apartmentId: apartment.id },
+      orderBy: [{ year: 'desc' }, { month: 'desc' }]
     })
 
     const payments = await prisma.payment.findMany({
-      where: { apartmentId: user.apartmentId },
-      orderBy: { paidDate: 'desc' }
+      where: { apartmentId: apartment.id },
+      include: { charge: true },
+      orderBy: { createdAt: 'desc' }
     })
 
-    const maintenanceRequests = await prisma.maintenanceRequest.findMany({
-      where: { apartmentId: user.apartmentId }
-    })
+    // Separate pending and paid charges
+    const pendingCharges: any[] = []
+    const paidCharges: any[] = []
 
-    // Calculate unpaid charges
-    const unpaidCharges = charges.filter(c => {
-      const chargePayments = payments.filter(p => p.chargeId === c.id)
-      return chargePayments.every(p => p.status !== 'PAID')
-    })
-    const unpaidTotal = unpaidCharges.reduce((sum, c) => sum + c.amount, 0)
+    for (const charge of charges) {
+      const chargePayments = payments.filter(p => p.chargeId === charge.id && p.status === 'PAID')
+      const paidAmount = chargePayments.reduce((sum, p) => sum + p.amount, 0)
+      
+      const chargeData = {
+        id: charge.id,
+        title: charge.title,
+        category: charge.category,
+        amount: charge.amount,
+        month: charge.month,
+        year: charge.year,
+        dueDate: charge.dueDate.toISOString(),
+        paidAmount,
+        status: paidAmount >= charge.amount ? 'PAID' : 'PENDING'
+      }
 
-    const paidTotal = payments.filter(p => p.status === 'PAID').reduce((sum, p) => sum + p.amount, 0)
+      if (paidAmount >= charge.amount) {
+        paidCharges.push(chargeData)
+      } else {
+        pendingCharges.push(chargeData)
+      }
+    }
+
+    const unpaidTotal = pendingCharges.reduce((sum, c) => sum + (c.amount - c.paidAmount), 0)
+    const paidTotal = paidCharges.reduce((sum, c) => sum + c.amount, 0)
 
     const latestPayment = payments
       .filter(p => p.status === 'PAID' && p.paidDate)
       .sort((a, b) => new Date(b.paidDate!).getTime() - new Date(a.paidDate!).getTime())[0]
 
+    // Get maintenance requests
+    const maintenanceRequests = await prisma.maintenanceRequest.findMany({
+      where: { apartmentId: apartment.id },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    // Get announcements for the residence
+    const now = new Date()
+    const announcements = await prisma.announcement.findMany({
+      where: {
+        residenceId: residence.id,
+        isActive: true,
+        OR: [
+          { endDate: null },
+          { endDate: { gte: now } }
+        ]
+      },
+      orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
+      take: 5,
+      include: { createdBy: { select: { name: true } } }
+    })
+
+    // Get documents for the residence (shared)
+    const documents = await prisma.document.findMany({
+      where: { residenceId: residence.id },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    })
+
+    // Monthly payment history
+    const monthlyPayments = []
+    const nowDate = new Date()
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(nowDate.getFullYear(), nowDate.getMonth() - i, 1)
+      const month = date.getMonth() + 1
+      const year = date.getFullYear()
+
+      const monthPayments = payments.filter(p => {
+        const paidDate = p.paidDate
+        return paidDate && paidDate.getMonth() === month && paidDate.getFullYear() === year && p.status === 'PAID'
+      })
+
+      monthlyPayments.push({
+        month: date.toLocaleDateString('fr-FR', { month: 'short' }),
+        amount: monthPayments.reduce((sum, p) => sum + p.amount, 0)
+      })
+    }
+
     return NextResponse.json({
-      apartment: user.apartment ? {
-        id: user.apartment.id,
-        number: user.apartment.number,
-        building: user.apartment.building,
-        floor: user.apartment.floor,
-        type: user.apartment.type,
-        area: user.apartment.area
-      } : null,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone
+      },
+      apartment: {
+        id: apartment.id,
+        number: apartment.number,
+        building: apartment.building,
+        floor: apartment.floor,
+        type: apartment.type,
+        area: apartment.area,
+        status: apartment.status,
+        rentAmount: apartment.rentAmount
+      },
+      residence: {
+        id: residence.id,
+        name: residence.name,
+        city: residence.city,
+        address: residence.address,
+        contactPhone: residence.contactPhone,
+        email: residence.email
+      },
       charges: {
         unpaid: unpaidTotal,
         paid: paidTotal,
-        total: charges.reduce((sum, c) => sum + c.amount, 0)
+        total: charges.reduce((sum, c) => sum + c.amount, 0),
+        pendingPayments: pendingCharges,
+        paidPayments: paidCharges
       },
       payments: {
         total: payments.length,
+        totalAmount: paidTotal,
         latestPayment: latestPayment ? {
+          id: latestPayment.id,
           amount: latestPayment.amount,
-          paidDate: latestPayment.paidDate!.toISOString()
+          method: latestPayment.method,
+          paidDate: latestPayment.paidDate!.toISOString(),
+          chargeTitle: latestPayment.charge.title
         } : null,
-        recent: payments.slice(0, 5).map(p => ({
+        recent: payments.slice(0, 10).map(p => ({
           id: p.id,
           amount: p.amount,
           status: p.status,
-          paidDate: p.paidDate?.toISOString()
+          method: p.method,
+          paidDate: p.paidDate?.toISOString(),
+          dueDate: p.dueDate.toISOString(),
+          chargeTitle: p.charge.title,
+          month: p.charge.month,
+          year: p.charge.year
         }))
       },
+      monthlyPayments,
       maintenanceRequests: {
         open: maintenanceRequests.filter(r => r.status === 'PENDING').length,
         inProgress: maintenanceRequests.filter(r => r.status === 'IN_PROGRESS').length,
@@ -90,11 +195,31 @@ export async function GET() {
         recent: maintenanceRequests.slice(0, 5).map(r => ({
           id: r.id,
           title: r.title,
+          description: r.description,
           status: r.status,
           priority: r.priority,
-          createdAt: r.createdAt.toISOString()
+          category: r.category,
+          createdAt: r.createdAt.toISOString(),
+          updatedAt: r.updatedAt.toISOString(),
+          resolvedAt: r.resolvedAt?.toISOString()
         }))
-      }
+      },
+      announcements: announcements.map(a => ({
+        id: a.id,
+        title: a.title,
+        content: a.content,
+        type: a.type,
+        priority: a.priority,
+        createdBy: a.createdBy.name,
+        createdAt: a.createdAt.toISOString()
+      })),
+      documents: documents.map(d => ({
+        id: d.id,
+        name: d.name,
+        type: d.type,
+        fileUrl: d.fileUrl,
+        createdAt: d.createdAt.toISOString()
+      }))
     })
   } catch (error) {
     console.error('Error fetching resident dashboard:', error)

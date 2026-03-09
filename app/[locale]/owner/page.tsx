@@ -15,7 +15,12 @@ import {
   CheckCircle2,
   Clock,
   Home,
-  DollarSign
+  DollarSign,
+  FileText,
+  Settings,
+  UserCog,
+  Activity,
+  CreditCard as PaymentIcon
 } from 'lucide-react'
 import { DashboardLayout, StatCard, SectionCard, ActivityList, QuickActionCard } from '@/components/dashboard'
 import { formatCurrency } from '@/lib/utils'
@@ -97,6 +102,10 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
       manageUsers: 'Gérer les utilisateurs',
       viewReports: 'Voir les rapports',
       settings: 'Paramètres',
+      managePlans: 'Gérer les plans',
+      manageAdmins: 'Gérer les administrateurs',
+      manageSubscriptions: 'Gérer les abonnements',
+      viewActivityLogs: 'Voir le journal d\'activité'
     },
     ar: {
       welcome: 'مرحباً',
@@ -123,6 +132,10 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
       manageUsers: 'إدارة المستخدمين',
       viewReports: 'عرض التقارير',
       settings: 'الإعدادات',
+      managePlans: 'إدارة الخطط',
+      manageAdmins: 'إدارة المسؤولين',
+      manageSubscriptions: 'إدارة الاشتراكات',
+      viewActivityLogs: 'سجل النشاط'
     }
   }
 
@@ -313,30 +326,44 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
 
           <SectionCard title={translations.quickActions}>
             <div className="grid grid-cols-2 gap-4">
-              <Link href={`/${locale}/owner/residences`} className="block">
+              <Link href={`/${locale}/owner/subscription-requests`} className="block">
                 <QuickActionCard
-                  icon={Building2}
-                  title={translations.addResidence}
-                  description="Ajouter une nouvelle propriété"
+                  icon={FileText}
+                  title="Demandes"
+                  description="Voir les demandes d'abonnement"
                 />
               </Link>
-              <Link href={`/${locale}/owner/users`} className="block">
+              <Link href={`/${locale}/owner/plans-management`} className="block">
                 <QuickActionCard
-                  icon={Users}
-                  title={translations.manageUsers}
-                  description="Gérer les utilisateurs"
+                  icon={CreditCard}
+                  title={translations.managePlans}
+                  description="Gérer les plans tarifaires"
                 />
               </Link>
-              <Link href={`/${locale}/owner/reports`} className="block">
+              <Link href={`/${locale}/owner/admin-management`} className="block">
                 <QuickActionCard
-                  icon={TrendingUp}
-                  title={translations.viewReports}
-                  description="Voir les statistiques"
+                  icon={UserCog}
+                  title={translations.manageAdmins}
+                  description="Gérer les administrateurs"
+                />
+              </Link>
+              <Link href={`/${locale}/owner/subscriptions-management`} className="block">
+                <QuickActionCard
+                  icon={PaymentIcon}
+                  title={translations.manageSubscriptions}
+                  description="Voir les abonnements"
+                />
+              </Link>
+              <Link href={`/${locale}/owner/activity-logs`} className="block">
+                <QuickActionCard
+                  icon={Activity}
+                  title={translations.viewActivityLogs}
+                  description="Historique des activités"
                 />
               </Link>
               <Link href={`/${locale}/owner/settings`} className="block">
                 <QuickActionCard
-                  icon={Wrench}
+                  icon={Settings}
                   title={translations.settings}
                   description="Configurer le compte"
                 />

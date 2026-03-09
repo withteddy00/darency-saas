@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { PrismaClient } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 
-const prisma = new PrismaClient()
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
@@ -126,5 +126,109 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error creating charge:', error)
     return NextResponse.json({ error: 'Failed to create charge' }, { status: 500 })
+  }
+}
+
+// PATCH - Update charge
+export async function PATCH(request: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const adminResidenceId = session.user.residenceId
+    if (!adminResidenceId) {
+      return NextResponse.json({ error: 'Admin residence not assigned' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { id, title, category, amount, month, year, description } = body
+
+    if (!id) {
+      return NextResponse.json({ error: 'Charge ID is required' }, { status: 400 })
+    }
+
+    // Verify charge belongs to this admin's residence
+    const existing = await prisma.charge.findFirst({
+      where: { id, residenceId: adminResidenceId }
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Charge not found in your residence' }, { status: 404 })
+    }
+
+    const updateData: any = {}
+    if (title !== undefined) updateData.title = title
+    if (category !== undefined) updateData.category = category
+    if (amount !== undefined) updateData.amount = amount
+    if (month !== undefined) updateData.month = month
+    if (year !== undefined) updateData.year = year
+    if (description !== undefined) updateData.description = description
+    
+    if (month !== undefined && year !== undefined) {
+      updateData.dueDate = new Date(year, month - 1, 28)
+    }
+
+    const charge = await prisma.charge.update({
+      where: { id },
+      data: updateData
+    })
+
+    return NextResponse.json(charge)
+  } catch (error) {
+    console.error('Error updating charge:', error)
+    return NextResponse.json({ error: 'Failed to update charge' }, { status: 500 })
+  }
+}
+
+// DELETE - Delete charge
+export async function DELETE(request: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const adminResidenceId = session.user.residenceId
+    if (!adminResidenceId) {
+      return NextResponse.json({ error: 'Admin residence not assigned' }, { status: 403 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: 'Charge ID is required' }, { status: 400 })
+    }
+
+    // Verify charge belongs to this admin's residence
+    const existing = await prisma.charge.findFirst({
+      where: { id, residenceId: adminResidenceId }
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Charge not found in your residence' }, { status: 404 })
+    }
+
+    // Check if charge has any payments
+    const paymentCount = await prisma.payment.count({
+      where: { chargeId: id }
+    })
+
+    if (paymentCount > 0) {
+      return NextResponse.json({ error: 'Cannot delete a charge with associated payments' }, { status: 400 })
+    }
+
+    await prisma.charge.delete({
+      where: { id }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting charge:', error)
+    return NextResponse.json({ error: 'Failed to delete charge' }, { status: 500 })
   }
 }

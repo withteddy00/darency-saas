@@ -1,8 +1,25 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
-import { Building2, Users, CreditCard, Wrench, BarChart3, MessageSquare, Check, ArrowRight, Star } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Building2, Users, CreditCard, Wrench, BarChart3, MessageSquare, Check, ArrowRight, Star, X, Loader2 } from 'lucide-react'
+
+interface Plan {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  monthlyPrice: number
+  yearlyPrice: number | null
+  features: string[]
+  maxResidences: number
+  maxAdmins: number
+  maxApartments: number
+  hasAdvancedReports: boolean
+  hasPrioritySupport: boolean
+  hasApiAccess: boolean
+  isPopular: boolean
+}
 
 const features = [
   {
@@ -18,7 +35,7 @@ const features = [
   {
     icon: CreditCard,
     title: 'Suivi des Paiements',
-    description: '自动化收取租金和管理费用。追踪付款状态并生成财务报告。'
+    description: 'Gérez les charges et les paiements de vos résidents facilement.'
   },
   {
     icon: Wrench,
@@ -34,60 +51,6 @@ const features = [
     icon: MessageSquare,
     title: 'Communication',
     description: 'Envoyez des notifications et maintenez le contact avec les résidents facilement.'
-  }
-]
-
-const plans = [
-  {
-    name: 'Starter',
-    slug: 'starter',
-    price: 499,
-    yearlyPrice: 4990,
-    description: 'Parfait pour les petites résidences',
-    features: [
-      '1 résidence',
-      '1 syndic',
-      'Jusqu\'à 50 appartements',
-      'Gestion des charges',
-      'Suivi des paiements',
-      'Support par email'
-    ],
-    highlighted: false
-  },
-  {
-    name: 'Pro',
-    slug: 'pro',
-    price: 999,
-    yearlyPrice: 9990,
-    description: 'Pour les gestionnaires professionnels',
-    features: [
-      '3 résidences',
-      '3 syndics',
-      'Jusqu\'à 200 appartements',
-      'Rapports avancés',
-      'Support prioritaire',
-      'API Access',
-      'Personnalisation'
-    ],
-    highlighted: true
-  },
-  {
-    name: 'Enterprise',
-    slug: 'enterprise',
-    price: 2499,
-    yearlyPrice: 24990,
-    description: 'Solution complète pour les grandes structures',
-    features: [
-      'Résidences illimitées',
-      'Syndics illimités',
-      'Appartements illimités',
-      'Rapports personnalisés',
-      'Support dédié 24/7',
-      'API Access complète',
-      'Formation incluse',
-      'Intégrations sur mesure'
-    ],
-    highlighted: false
   }
 ]
 
@@ -114,6 +77,77 @@ const testimonials = [
 
 export default function LandingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [loadingPlans, setLoadingPlans] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [formData, setFormData] = useState({
+    organizationName: '',
+    managerName: '',
+    email: '',
+    phone: '',
+    city: '',
+    numberOfApartments: '',
+    planId: ''
+  })
+
+  useEffect(() => {
+    fetchPlans()
+  }, [])
+
+  const fetchPlans = async () => {
+    try {
+      const response = await fetch('/api/public/plans')
+      if (response.ok) {
+        const data = await response.json()
+        setPlans(data.plans)
+      }
+    } catch (error) {
+      console.error('Error fetching plans:', error)
+    } finally {
+      setLoadingPlans(false)
+    }
+  }
+
+  const handlePlanSelect = (plan: Plan) => {
+    setSelectedPlan(plan)
+    setFormData(prev => ({ ...prev, planId: plan.id }))
+    setShowModal(true)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+
+    try {
+      const response = await fetch('/api/public/subscription-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, planId: selectedPlan?.id })
+      })
+
+      if (response.ok) {
+        setSubmitSuccess(true)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Erreur lors de la soumission')
+      }
+    } catch (error) {
+      console.error('Error submitting request:', error)
+      alert('Erreur lors de la soumission')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const getYearlySavings = (monthlyPrice: number, yearlyPrice: number | null) => {
+    if (!yearlyPrice) return 0
+    const monthlyEquivalent = yearlyPrice / 12
+    const savings = monthlyPrice - monthlyEquivalent
+    return Math.round((savings / monthlyPrice) * 100)
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -312,7 +346,7 @@ export default function LandingPage() {
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                   billingCycle === 'monthly' 
                     ? 'bg-white shadow-sm text-text-primary' 
-                    : 'text-text-secondary'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 Mensuel
@@ -322,70 +356,103 @@ export default function LandingPage() {
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center ${
                   billingCycle === 'yearly' 
                     ? 'bg-white shadow-sm text-text-primary' 
-                    : 'text-text-secondary'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 Annuel
-                <span className="ml-2 text-xs bg-success/10 text-success px-2 py-0.5 rounded-full">
-                  -17%
-                </span>
+                {plans.some(p => p.yearlyPrice && getYearlySavings(p.monthlyPrice, p.yearlyPrice) > 0) && (
+                  <span className="ml-2 text-xs bg-success/10 text-success px-2 py-0.5 rounded-full">
+                    -17%
+                  </span>
+                )}
               </button>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {plans.map((plan, i) => (
-              <div 
-                key={i}
-                className={`relative bg-surface rounded-2xl p-8 border ${
-                  plan.highlighted 
-                    ? 'border-primary shadow-xl shadow-primary/10' 
-                    : 'border-border'
-                }`}
-              >
-                {plan.highlighted && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-sm font-medium">
-                    Populaire
+          {loadingPlans ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : plans.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-text-secondary">Aucun plan disponible pour le moment.</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {plans.map((plan) => {
+                const savings = getYearlySavings(plan.monthlyPrice, plan.yearlyPrice)
+                return (
+                  <div 
+                    key={plan.id}
+                    className={`relative bg-surface rounded-2xl p-8 border transition-all hover:shadow-xl ${
+                      plan.isPopular 
+                        ? 'border-primary shadow-xl shadow-primary/10 transform md:-translate-y-2' 
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    {plan.isPopular && (
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                        <Star className="w-4 h-4 fill-current" />
+                        Populaire
+                      </div>
+                    )}
+                    <div className="text-center mb-6">
+                      <h3 className="text-2xl font-bold text-text-primary mb-2">{plan.name}</h3>
+                      <p className="text-text-secondary text-sm">{plan.description}</p>
+                    </div>
+                    <div className="text-center mb-6">
+                      <div className="flex items-baseline justify-center">
+                        <span className="text-4xl font-bold text-text-primary">
+                          {billingCycle === 'monthly' ? plan.monthlyPrice : (plan.yearlyPrice ? Math.round(plan.yearlyPrice / 12) : plan.monthlyPrice)}
+                        </span>
+                        <span className="text-text-secondary ml-2">DH/mois</span>
+                      </div>
+                      {billingCycle === 'yearly' && plan.yearlyPrice && (
+                        <div className="mt-2">
+                          <p className="text-text-primary font-medium">{plan.yearlyPrice.toLocaleString()} DH facturés annuellement</p>
+                          {savings > 0 && (
+                            <p className="text-success text-sm flex items-center justify-center gap-1">
+                              <Check className="w-4 h-4" /> Économie de {savings}%
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <ul className="space-y-3 mb-8">
+                      <li className="flex items-center text-text-secondary">
+                        <Check className="w-5 h-5 text-success mr-3 flex-shrink-0" />
+                        {plan.maxResidences === 9999 ? 'Résidences illimitées' : `${plan.maxResidences} résidence${plan.maxResidences > 1 ? 's' : ''}`}
+                      </li>
+                      <li className="flex items-center text-text-secondary">
+                        <Check className="w-5 h-5 text-success mr-3 flex-shrink-0" />
+                        {plan.maxAdmins === 9999 ? 'Syndics illimités' : `${plan.maxAdmins} syndic${plan.maxAdmins > 1 ? 's' : ''}`}
+                      </li>
+                      <li className="flex items-center text-text-secondary">
+                        <Check className="w-5 h-5 text-success mr-3 flex-shrink-0" />
+                        {plan.maxApartments === 9999 ? 'Appartements illimités' : `Jusqu'à ${plan.maxApartments} appartements`}
+                      </li>
+                      {plan.features.map((feature, j) => (
+                        <li key={j} className="flex items-center text-text-secondary">
+                          <Check className="w-5 h-5 text-success mr-3 flex-shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <button 
+                      onClick={() => handlePlanSelect(plan)}
+                      className={`block w-full py-3 px-6 rounded-xl font-semibold text-center transition-all ${
+                        plan.isPopular
+                          ? 'bg-primary text-white hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25'
+                          : 'bg-surface-elevated text-text-primary hover:bg-border'
+                      }`}
+                    >
+                      Choisir ce plan
+                    </button>
                   </div>
-                )}
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-text-primary mb-2">{plan.name}</h3>
-                  <p className="text-text-secondary text-sm">{plan.description}</p>
-                </div>
-                <div className="text-center mb-6">
-                  <div className="flex items-baseline justify-center">
-                    <span className="text-4xl font-bold text-text-primary">
-                      {billingCycle === 'monthly' ? plan.price : Math.round(plan.yearlyPrice! / 12)}
-                    </span>
-                    <span className="text-text-secondary ml-2">DH/mois</span>
-                  </div>
-                  {billingCycle === 'yearly' && (
-                    <p className="text-text-tertiary text-sm mt-1">
-                      {plan.yearlyPrice} DH facturés annuellement
-                    </p>
-                  )}
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, j) => (
-                    <li key={j} className="flex items-center text-text-secondary">
-                      <Check className="w-5 h-5 text-success mr-3 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Link 
-                  href="/fr/login"
-                  className={`block w-full py-3 px-6 rounded-xl font-semibold text-center transition-all ${
-                    plan.highlighted
-                      ? 'bg-primary text-white hover:bg-primary-dark'
-                      : 'bg-surface-elevated text-text-primary hover:bg-border'
-                  }`}
-                >
-                  Commencer
-                </Link>
-              </div>
-            ))}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -444,6 +511,122 @@ export default function LandingPage() {
           </p>
         </div>
       </section>
+
+      {/* Subscription Request Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { setShowModal(false); setSubmitSuccess(false) }} />
+          <div className="relative bg-surface rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            {submitSuccess ? (
+              <div className="p-8 text-center">
+                <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-8 h-8 text-success" />
+                </div>
+                <h3 className="text-2xl font-bold text-text-primary mb-2">Demande soumise!</h3>
+                <p className="text-text-secondary mb-6">
+                  Votre demande d&apos;abonnement a été soumise avec succès. Notre équipe vous contactera dans les plus brefs délais.
+                </p>
+                <button
+                  onClick={() => { setShowModal(false); setSubmitSuccess(false) }}
+                  className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                >
+                  Fermer
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="p-6 border-b border-border flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-text-primary">Demande d&apos;abonnement</h3>
+                    <p className="text-sm text-text-secondary">{selectedPlan?.name} - {billingCycle === 'monthly' ? 'Mensuel' : 'Annuel'}</p>
+                  </div>
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="p-2 hover:bg-surface-elevated rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-text-secondary" />
+                  </button>
+                </div>
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Nom de la résidence / organisation *</label>
+                    <input
+                      type="text"
+                      value={formData.organizationName}
+                      onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
+                      className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Nom complet du gérant *</label>
+                    <input
+                      type="text"
+                      value={formData.managerName}
+                      onChange={(e) => setFormData({ ...formData, managerName: e.target.value })}
+                      className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">Email *</label>
+                      <input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">Téléphone *</label>
+                      <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">Ville *</label>
+                      <input
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">Nombre d&apos;appartements *</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.numberOfApartments}
+                        onChange={(e) => setFormData({ ...formData, numberOfApartments: e.target.value })}
+                        className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {submitting && <Loader2 className="w-5 h-5 animate-spin" />}
+                    Soumettre ma demande
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="bg-surface-elevated border-t border-border py-12 px-4 sm:px-6 lg:px-8">

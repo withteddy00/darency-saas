@@ -1,10 +1,9 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 import { authOptions } from '@/lib/auth'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
@@ -125,9 +124,13 @@ export async function POST(request: Request) {
     }
 
     // Create the resident user
+    const saltRounds = 10
+    const hashedPassword = await bcrypt.hash('TempPassword123!', saltRounds)
+
     const residentData: any = {
       name,
       email,
+      password: hashedPassword,
       phone: phone || null,
       role: 'RESIDENT',
       organizationId,
@@ -156,5 +159,130 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error creating resident:', error)
     return NextResponse.json({ error: 'Failed to create resident' }, { status: 500 })
+  }
+}
+
+// PATCH - Update resident
+export async function PATCH(request: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'OWNER')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { id, name, phone, apartmentId } = body
+
+    if (!id) {
+      return NextResponse.json({ error: 'Resident ID is required' }, { status: 400 })
+    }
+
+    let residenceFilter = {}
+    if (session.user.role === 'ADMIN' && session.user.residenceId) {
+      residenceFilter = { residenceId: session.user.residenceId }
+    }
+
+    // Verify resident exists and belongs to accessible residence
+    const existing = await prisma.user.findFirst({
+      where: { 
+        id, 
+        role: 'RESIDENT',
+        ...(session.user.role === 'ADMIN' ? { apartment: { residenceId: session.user.residenceId } } : { organizationId: session.user.organizationId })
+      }
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Resident not found' }, { status: 404 })
+    }
+
+    const updateData: any = {}
+    if (name !== undefined) updateData.name = name
+    if (phone !== undefined) updateData.phone = phone
+    
+    // Handle apartment change
+    if (apartmentId !== undefined) {
+      // If changing to a new apartment
+      if (apartmentId && apartmentId !== existing.apartmentId) {
+        // Free up old apartment
+        if (existing.apartmentId) {
+          await prisma.apartment.update({
+            where: { id: existing.apartmentId },
+            data: { status: 'VACANT' }
+          })
+        }
+        // Occupy new apartment
+        await prisma.apartment.update({
+          where: { id: apartmentId },
+          data: { status: 'OCCUPIED' }
+        })
+        updateData.apartmentId = apartmentId
+      } else if (!apartmentId && existing.apartmentId) {
+        // Removing apartment assignment
+        await prisma.apartment.update({
+          where: { id: existing.apartmentId },
+          data: { status: 'VACANT' }
+        })
+        updateData.apartmentId = null
+      }
+    }
+
+    const resident = await prisma.user.update({
+      where: { id },
+      data: updateData
+    })
+
+    return NextResponse.json(resident)
+  } catch (error) {
+    console.error('Error updating resident:', error)
+    return NextResponse.json({ error: 'Failed to update resident' }, { status: 500 })
+  }
+}
+
+// DELETE - Delete resident
+export async function DELETE(request: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'OWNER')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: 'Resident ID is required' }, { status: 400 })
+    }
+
+    // Verify resident exists
+    const existing = await prisma.user.findFirst({
+      where: { 
+        id, 
+        role: 'RESIDENT',
+        ...(session.user.role === 'ADMIN' ? { apartment: { residenceId: session.user.residenceId } } : { organizationId: session.user.organizationId })
+      }
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Resident not found' }, { status: 404 })
+    }
+
+    // If apartment is assigned, free it up
+    if (existing.apartmentId) {
+      await prisma.apartment.update({
+        where: { id: existing.apartmentId },
+        data: { status: 'VACANT' }
+      })
+    }
+
+    await prisma.user.delete({
+      where: { id }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting resident:', error)
+    return NextResponse.json({ error: 'Failed to delete resident' }, { status: 500 })
   }
 }

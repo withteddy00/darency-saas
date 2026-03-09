@@ -1,10 +1,11 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { PrismaClient } from '@prisma/client'
-import { authOptions } from '@/lib/auth'
 
-const prisma = new PrismaClient()
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+
+
 
 export async function GET() {
   try {
@@ -115,5 +116,98 @@ export async function PATCH(request: Request) {
   } catch (error) {
     console.error('Error updating maintenance request:', error)
     return NextResponse.json({ error: 'Failed to update maintenance request' }, { status: 500 })
+  }
+}
+
+// POST - Create maintenance request (for testing/admin, normally created by resident)
+export async function POST(request: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const adminResidenceId = session.user.residenceId
+    if (!adminResidenceId) {
+      return NextResponse.json({ error: 'Admin residence not assigned' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { title, description, priority, category, apartmentId } = body
+
+    if (!title || !description || !apartmentId) {
+      return NextResponse.json({ error: 'Title, description, and apartmentId are required' }, { status: 400 })
+    }
+
+    // Verify the apartment belongs to this admin's residence
+    const apartment = await prisma.apartment.findFirst({
+      where: {
+        id: apartmentId,
+        residenceId: adminResidenceId
+      }
+    })
+
+    if (!apartment) {
+      return NextResponse.json({ error: 'Apartment not found in your residence' }, { status: 404 })
+    }
+
+    const maintenanceRequest = await prisma.maintenanceRequest.create({
+      data: {
+        title,
+        description,
+        priority: priority || 'MEDIUM',
+        category: category || 'OTHER',
+        residenceId: adminResidenceId,
+        apartmentId,
+        reportedById: session.user.id
+      }
+    })
+
+    return NextResponse.json(maintenanceRequest)
+  } catch (error) {
+    console.error('Error creating maintenance request:', error)
+    return NextResponse.json({ error: 'Failed to create maintenance request' }, { status: 500 })
+  }
+}
+
+// DELETE - Delete maintenance request
+export async function DELETE(request: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const adminResidenceId = session.user.residenceId
+    if (!adminResidenceId) {
+      return NextResponse.json({ error: 'Admin residence not assigned' }, { status: 403 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: 'Maintenance request ID is required' }, { status: 400 })
+    }
+
+    // Verify maintenance request belongs to this admin's residence
+    const existing = await prisma.maintenanceRequest.findFirst({
+      where: { id, residenceId: adminResidenceId }
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Maintenance request not found in your residence' }, { status: 404 })
+    }
+
+    await prisma.maintenanceRequest.delete({
+      where: { id }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting maintenance request:', error)
+    return NextResponse.json({ error: 'Failed to delete maintenance request' }, { status: 500 })
   }
 }

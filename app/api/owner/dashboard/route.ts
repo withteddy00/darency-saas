@@ -1,10 +1,8 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { PrismaClient } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
@@ -14,195 +12,158 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get organization ID from session
-    const organizationId = session.user.organizationId
+    // Platform-wide statistics
+    const [
+      totalResidences,
+      totalAdmins,
+      totalResidents,
+      totalOrganizations,
+      activeSubscriptions,
+      pendingRequests,
+      allPayments,
+      allCharges,
+      allExpenses,
+      plans
+    ] = await Promise.all([
+      prisma.residence.count(),
+      prisma.user.count({ where: { role: 'ADMIN' } }),
+      prisma.user.count({ where: { role: 'RESIDENT' } }),
+      prisma.organization.count(),
+      prisma.organization.count({ where: { subscriptionStatus: 'ACTIVE' } }),
+      prisma.subscriptionRequest.count({ where: { status: 'PENDING' } }),
+      prisma.payment.findMany({ where: { status: 'PAID' } }),
+      prisma.charge.findMany(),
+      prisma.expense.findMany(),
+      prisma.subscriptionPlan.findMany({ orderBy: { price: 'asc' } })
+    ])
 
-    if (!organizationId) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 400 })
+    // Calculate revenue
+    const totalRevenue = allPayments.reduce((sum, p) => sum + p.amount, 0)
+    const totalCharges = allCharges.reduce((sum, c) => sum + c.amount, 0)
+    const totalExpensesAmount = allExpenses.reduce((sum, e) => sum + e.amount, 0)
+
+    // Monthly revenue (last 12 months)
+    const now = new Date()
+    const monthlyRevenue: { month: string; revenue: number }[] = []
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const month = date.getMonth() + 1
+      const year = date.getFullYear()
+
+      const monthPayments = allPayments.filter(p => {
+        const paidDate = p.paidDate
+        return paidDate && paidDate.getMonth() === month && paidDate.getFullYear() === year
+      })
+
+      monthlyRevenue.push({
+        month: date.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }),
+        revenue: monthPayments.reduce((sum, p) => sum + p.amount, 0)
+      })
     }
 
-    // Get all residences for this organization
-    const residences = await prisma.residence.findMany({
-      where: { organizationId },
-      include: {
-        apartments: true,
-        adminUsers: true,
-        charges: true,
-        maintenanceRequests: true,
-      }
-    })
-
-    // Calculate statistics from database
-    const totalResidences = residences.length
-    
-    const totalApartments = residences.reduce((sum, r) => sum + r.apartments.length, 0)
-    const occupiedApartments = residences.reduce(
-      (sum, r) => sum + r.apartments.filter(a => a.status === 'OCCUPIED').length, 
-      0
-    )
-    const vacantApartments = totalApartments - occupiedApartments
-    const occupancyRate = totalApartments > 0 
-      ? Math.round((occupiedApartments / totalApartments) * 100) 
-      : 0
-
-    // Count admins (users with role ADMIN)
-    const totalAdmins = await prisma.user.count({
-      where: { 
-        role: 'ADMIN',
-        organizationId 
-      }
-    })
-
-    // Count residents (users with role RESIDENT)
-    const totalResidents = await prisma.user.count({
-      where: { 
-        role: 'RESIDENT',
-        organizationId 
-      }
-    })
-
-    // Calculate unpaid charges (charges without full payment)
-    const allCharges = residences.flatMap(r => r.charges)
-    const allPayments = await prisma.payment.findMany({
-      where: {
-        charge: {
-          residenceId: { in: residences.map(r => r.id) }
-        }
-      }
-    })
-
-    let unpaidChargesTotal = 0
-    for (const charge of allCharges) {
-      const chargePayments = allPayments.filter(p => p.chargeId === charge.id)
-      const paidAmount = chargePayments
-        .filter(p => p.status === 'PAID')
-        .reduce((sum, p) => sum + p.amount, 0)
-      if (paidAmount < charge.amount) {
-        unpaidChargesTotal += (charge.amount - paidAmount)
-      }
-    }
-
-    // Count open maintenance requests
-    const openMaintenanceRequests = residences.reduce(
-      (sum, r) => sum + r.maintenanceRequests.filter(m => m.status !== 'COMPLETED' && m.status !== 'CANCELLED').length,
-      0
-    )
-
-    // Get recent activity (recent payments and maintenance requests)
-    const recentPayments = await prisma.payment.findMany({
-      where: {
-        status: 'PAID',
-        apartment: {
-          residence: {
-            organizationId
-          }
-        }
-      },
-      orderBy: { paidDate: 'desc' },
-      take: 5,
-      include: {
-        apartment: {
-          include: {
-            residence: {
-              select: { name: true }
-            }
-          }
-        }
-      }
-    })
-
-    const recentMaintenanceRequests = await prisma.maintenanceRequest.findMany({
-      where: {
-        residence: {
-          organizationId
-        }
-      },
+    // Recent subscription requests
+    const recentRequests = await prisma.subscriptionRequest.findMany({
+      where: { status: 'PENDING' },
       orderBy: { createdAt: 'desc' },
       take: 5,
-      include: {
-        apartment: true,
-        residence: {
-          select: { name: true }
-        }
+      include: { plan: true }
+    })
+
+    // Recent organizations
+    const recentOrganizations = await prisma.organization.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      include: { 
+        plan: true,
+        _count: { select: { residences: true, users: true } }
       }
     })
 
-    // Format residence stats for top residences
-    const residenceStats = await Promise.all(residences.map(async (residence) => {
-      const apartments = await prisma.apartment.findMany({
-        where: { residenceId: residence.id }
-      })
-      
-      const residentCount = await prisma.user.count({
-        where: {
-          role: 'RESIDENT',
-          apartment: {
-            residenceId: residence.id
-          }
-        }
-      })
-
-      const charges = await prisma.charge.findMany({
-        where: { residenceId: residence.id }
-      })
-
-      const payments = await prisma.payment.findMany({
-        where: {
-          charge: { residenceId: residence.id }
-        }
-      })
-
-      let revenue = 0
-      for (const charge of charges) {
-        const chargePayments = payments.filter(p => p.chargeId === charge.id && p.status === 'PAID')
-        revenue += chargePayments.reduce((sum, p) => sum + p.amount, 0)
+    // Get top residences by revenue
+    const residences = await prisma.residence.findMany({
+      include: {
+        apartments: true,
+        charges: true,
+        _count: { select: { apartments: true } }
       }
+    })
+
+    const residenceStats = await Promise.all(residences.map(async (r) => {
+      const charges = await prisma.charge.findMany({ where: { residenceId: r.id } })
+      const payments = await prisma.payment.findMany({
+        where: { charge: { residenceId: r.id }, status: 'PAID' }
+      })
+      const revenue = payments.reduce((sum, p) => sum + p.amount, 0)
+      const residents = await prisma.user.count({
+        where: { role: 'RESIDENT', apartment: { residenceId: r.id } }
+      })
 
       return {
-        id: residence.id,
-        name: residence.name,
-        city: residence.city,
-        units: apartments.length,
-        occupancy: apartments.length > 0 
-          ? Math.round((apartments.filter(a => a.status === 'OCCUPIED').length / apartments.length) * 100)
-          : 0,
+        id: r.id,
+        name: r.name,
+        city: r.city,
+        apartments: r._count.apartments,
+        residents,
         revenue,
-        residents: residentCount
+        status: r.status
       }
     }))
 
-    // Sort by revenue
     residenceStats.sort((a, b) => b.revenue - a.revenue)
+    const topResidences = residenceStats.slice(0, 5)
 
     return NextResponse.json({
       stats: {
         totalResidences,
-        totalApartments,
-        occupiedApartments,
-        vacantApartments,
-        occupancyRate,
         totalAdmins,
         totalResidents,
-        unpaidCharges: unpaidChargesTotal,
-        openMaintenanceRequests
+        totalOrganizations,
+        activeSubscriptions,
+        pendingRequests,
+        totalRevenue,
+        totalCharges,
+        totalExpenses: totalExpensesAmount,
+        netRevenue: totalRevenue - totalExpensesAmount,
+        unpaidAmount: totalCharges - totalRevenue
       },
-      recentPayments: recentPayments.map(p => ({
+      monthlyRevenue,
+      recentRequests: recentRequests.map(r => ({
+        id: r.id,
+        firstName: r.firstName,
+        lastName: r.lastName,
+        email: r.email,
+        residenceName: r.residenceName,
+        city: r.city,
+        numberOfApartments: r.numberOfApartments,
+        plan: r.plan.name,
+        createdAt: r.createdAt.toISOString()
+      })),
+      recentOrganizations: recentOrganizations.map(o => ({
+        id: o.id,
+        name: o.name,
+        slug: o.slug,
+        city: o.city,
+        plan: o.plan?.name || 'None',
+        residences: o._count.residences,
+        users: o._count.users,
+        status: o.subscriptionStatus,
+        createdAt: o.createdAt.toISOString()
+      })),
+      topResidences,
+      plans: plans.map(p => ({
         id: p.id,
-        amount: p.amount,
-        paidDate: p.paidDate?.toISOString(),
-        apartment: p.apartment.number,
-        residence: p.apartment.residence.name
-      })),
-      recentMaintenanceRequests: recentMaintenanceRequests.map(m => ({
-        id: m.id,
-        title: m.title,
-        status: m.status,
-        priority: m.priority,
-        apartment: m.apartment.number,
-        residence: m.residence.name,
-        createdAt: m.createdAt.toISOString()
-      })),
-      topResidences: residenceStats.slice(0, 5)
+        name: p.name,
+        slug: p.slug,
+        price: p.price,
+        yearlyPrice: p.yearlyPrice,
+        billingCycle: p.billingCycle,
+        maxResidences: p.maxResidences,
+        maxAdmins: p.maxAdmins,
+        maxApartments: p.maxApartments,
+        isVisible: p.isVisible,
+        isPopular: p.isPopular,
+        isActive: p.isActive
+      }))
     })
   } catch (error) {
     console.error('Error fetching owner dashboard:', error)
