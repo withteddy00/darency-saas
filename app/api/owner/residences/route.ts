@@ -1,10 +1,11 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { PrismaClient } from '@prisma/client'
-import { authOptions } from '@/lib/auth'
 
-const prisma = new PrismaClient()
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+
+
 
 export async function GET() {
   try {
@@ -126,5 +127,51 @@ export async function PATCH(request: Request) {
   } catch (error) {
     console.error('Error updating residence:', error)
     return NextResponse.json({ error: 'Failed to update residence' }, { status: 500 })
+  }
+}
+
+// DELETE - Delete residence
+export async function DELETE(request: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'OWNER') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: 'Residence ID is required' }, { status: 400 })
+    }
+
+    // Verify residence belongs to this organization
+    const existingResidence = await prisma.residence.findFirst({
+      where: { id, organizationId: session.user.organizationId }
+    })
+
+    if (!existingResidence) {
+      return NextResponse.json({ error: 'Residence not found' }, { status: 404 })
+    }
+
+    // Check if residence has apartments with residents
+    const apartmentCount = await prisma.apartment.count({
+      where: { residenceId: id, status: 'OCCUPIED' }
+    })
+
+    if (apartmentCount > 0) {
+      return NextResponse.json({ 
+        error: 'Cannot delete residence with occupied apartments. Please reassign or vacate residents first.' 
+      }, { status: 400 })
+    }
+
+    await prisma.residence.delete({
+      where: { id }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting residence:', error)
+    return NextResponse.json({ error: 'Failed to delete residence' }, { status: 500 })
   }
 }

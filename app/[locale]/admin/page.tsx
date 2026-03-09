@@ -327,23 +327,23 @@ export default function AdminDashboard({ params }: { params: { locale: string } 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="p-4 bg-surface-elevated rounded-xl">
               <p className="text-sm text-text-secondary">Ce mois</p>
-              <p className="text-2xl font-bold text-success mt-1">{formatCurrency(28500)}</p>
-              <p className="text-xs text-success mt-1">+12% vs mois dernier</p>
+              <p className="text-2xl font-bold text-success mt-1">{formatCurrency(stats.monthlyRevenue || 0)}</p>
+              <p className="text-xs text-success mt-1">+{stats.monthlyCollectionRate || 0}% vs mois dernier</p>
             </div>
             <div className="p-4 bg-surface-elevated rounded-xl">
               <p className="text-sm text-text-secondary">En attente</p>
-              <p className="text-2xl font-bold text-warning mt-1">{formatCurrency(4500)}</p>
-              <p className="text-xs text-text-tertiary mt-1">3 paiements en retard</p>
+              <p className="text-2xl font-bold text-warning mt-1">{formatCurrency(stats.pendingPayments || 0)}</p>
+              <p className="text-xs text-text-tertiary mt-1">{stats.unpaidCount || 0} paiements en retard</p>
             </div>
             <div className="p-4 bg-surface-elevated rounded-xl">
               <p className="text-sm text-text-secondary">{translations.monthlyCollection}</p>
-              <p className="text-2xl font-bold text-primary mt-1">86%</p>
-              <p className="text-xs text-success mt-1">+5% vs mois dernier</p>
+              <p className="text-2xl font-bold text-primary mt-1">{stats.monthlyCollectionRate || 0}%</p>
+              <p className="text-xs text-success mt-1">+{Math.max(0, (stats.monthlyCollectionRate || 0) - 86)}% vs mois dernier</p>
             </div>
             <div className="p-4 bg-surface-elevated rounded-xl">
               <p className="text-sm text-text-secondary">Total annuel</p>
-              <p className="text-2xl font-bold text-text-primary mt-1">{formatCurrency(342000)}</p>
-              <p className="text-xs text-text-tertiary mt-1">Année 2026</p>
+              <p className="text-2xl font-bold text-text-primary mt-1">{formatCurrency(stats.annualRevenue || 0)}</p>
+              <p className="text-xs text-text-tertiary mt-1">Année {new Date().getFullYear()}</p>
             </div>
           </div>
         </SectionCard>

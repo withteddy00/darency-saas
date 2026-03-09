@@ -112,7 +112,12 @@ export const authOptions: NextAuthOptions = {
       },
     },
   },
-  secret: process.env.NEXTAUTH_SECRET || 'development-secret-change-in-production'
+  secret: process.env.NEXTAUTH_SECRET || (() => {
+    if (process.env.NODE_ENV === 'production' && process.env.NEXTAUTH_SECRET === undefined) {
+      console.warn('WARNING: NEXTAUTH_SECRET is not set in production. This is insecure and will cause runtime errors.')
+    }
+    return process.env.NEXTAUTH_SECRET || 'development-secret-do-not-use-in-production'
+  })()
 }
 
 declare module 'next-auth' {

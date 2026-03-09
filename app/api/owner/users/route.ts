@@ -1,10 +1,9 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 import { authOptions } from '@/lib/auth'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
@@ -108,12 +107,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Resident must be assigned to an apartment' }, { status: 400 })
     }
 
-    // Create the user - password is required by schema
+    // Hash password before storing
+    const saltRounds = 10
+    const hashedPassword = await bcrypt.hash(password || 'TempPassword123!', saltRounds)
+
+    // Create the user
     const user = await prisma.user.create({
       data: {
         name,
         email,
-        password: password || 'TempPassword123!', // Temporary password - should be changed
+        password: hashedPassword,
         phone: phone || null,
         role,
         organizationId,

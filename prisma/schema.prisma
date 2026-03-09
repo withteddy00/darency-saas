@@ -22,9 +22,11 @@ model Organization {
   updatedAt DateTime @updatedAt
 
   // Subscription
-  plan           String   @default("STARTER") // STARTER, PRO, ENTERPRISE
+  planId        String?
+  plan          SubscriptionPlan? @relation(fields: [planId], references: [id])
   planStartDate DateTime @default(now())
   planEndDate   DateTime?
+  subscriptionStatus String @default("ACTIVE") // ACTIVE, SUSPENDED, CANCELLED, EXPIRED
   
   // Relations
   users      User[]
@@ -39,19 +41,24 @@ model SubscriptionPlan {
   description String?
   price       Float    // Monthly price in MAD
   yearlyPrice Float?   // Yearly price in MAD
+  billingCycle String   @default("MONTHLY") // MONTHLY, YEARLY
   features    String   // JSON string of features
   maxResidences Int    @default(1)
   maxAdmins     Int    @default(1)
   maxApartments Int    @default(50)
+  maxResidents  Int    @default(100)
   hasAdvancedReports Boolean @default(false)
   hasPrioritySupport Boolean @default(false)
   hasApiAccess   Boolean @default(false)
   isActive      Boolean @default(true)
+  isVisible     Boolean @default(true)  // Show on landing page
+  isPopular     Boolean @default(false) // Highlight as popular
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
   subscriptionRequests SubscriptionRequest[]
+  organizations Organization[]
 }
 
 // Residence (Building complex)
@@ -84,6 +91,8 @@ model Residence {
   expenses     Expense[]
   charges     Charge[]
   maintenanceRequests MaintenanceRequest[]
+  announcements Announcement[]
+  documents    Document[]
 
   // For ADMIN users who manage this residence
   adminUsers User[] @relation("AdminResidence")
@@ -123,6 +132,8 @@ model User {
   // Relations
   admins              Admin[]
   maintenanceRequests MaintenanceRequest[]
+  announcements       Announcement[]
+  uploadedDocuments   Document[]
 }
 
 // Admin profile (specific to a Residence)
@@ -169,6 +180,7 @@ model Apartment {
   maintenanceRequests MaintenanceRequest[]
   occupancyHistory   ApartmentOccupancyHistory[]
   apartmentHistory   ApartmentHistory[]
+  documents          Document[]
 
   @@unique([residenceId, number])
 }
@@ -321,4 +333,74 @@ model SubscriptionRequestHistory {
   description     String
   performedBy     String?  // Who performed the action (admin email or system)
   createdAt       DateTime @default(now())
+}
+
+// Announcement - community announcements
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  type        String   @default("GENERAL") // GENERAL, URGENT, EVENT, MAINTENANCE
+  priority    String   @default("NORMAL") // NORMAL, HIGH
+  isActive    Boolean  @default(true)
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  residenceId String
+  residence   Residence @relation(fields: [residenceId], references: [id])
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+}
+
+// Document - uploaded documents
+model Document {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   // CONTRACT, INVOICE, RECEIPT, POLICY, OTHER
+  fileUrl     String
+  fileSize    Int?
+  mimeType    String?
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  residenceId String
+  residence   Residence @relation(fields: [residenceId], references: [id])
+  uploadedById String
+  uploadedBy  User     @relation(fields: [uploadedById], references: [id])
+  
+  // Optional link to apartment
+  apartmentId String?
+  apartment   Apartment? @relation(fields: [apartmentId], references: [id])
+}
+
+// Activity Log - tracks all actions in the system
+model ActivityLog {
+  id          String   @id @default(cuid())
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, APPROVE, REJECT, etc.
+  target      String   // The entity type being acted upon
+  targetId    String?  // The ID of the entity
+  description String?  // Human-readable description
+  metadata    String?  // JSON string for additional data
+  
+  // User info
+  userId      String?
+  userName    String?
+  userEmail   String?
+  userRole    String?
+  
+  // Organization context
+  organizationId String?
+  
+  // Residence context (for admin actions)
+  residenceId String?
+  residenceName String?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
 }
