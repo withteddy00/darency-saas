@@ -337,7 +337,7 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
                   description="Voir les demandes d'abonnement"
                 />
               </Link>
-              <Link href={`/${locale}/owner/plans-management`} className="block">
+              <Link href={`/${locale}/owner/plans`} className="block">
                 <QuickActionCard
                   icon={CreditCard}
                   title={translations.managePlans}
@@ -351,7 +351,7 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
                   description="Gérer les administrateurs"
                 />
               </Link>
-              <Link href={`/${locale}/owner/subscriptions-management`} className="block">
+              <Link href={`/${locale}/owner/subscriptions`} className="block">
                 <QuickActionCard
                   icon={PaymentIcon}
                   title={translations.manageSubscriptions}
