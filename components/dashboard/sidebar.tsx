@@ -42,8 +42,10 @@ const ownerNavItems: NavItem[] = [
   { href: '/owner/residences', label: 'Residences', icon: Building2 },
   { href: '/owner/users', label: 'Users', icon: Users },
   { href: '/owner/reports', label: 'Reports', icon: FileBarChart },
-  { href: '/owner/plan', label: 'Plans', icon: CreditCard },
-  { href: '/owner/abonnements', label: 'Abonnements', icon: CheckCircle2 },
+  { href: '/owner/plans', label: 'Plans', icon: CreditCard },
+  { href: '/owner/subscriptions', label: 'Subscriptions', icon: CheckCircle2 },
+  { href: '/owner/subscription-requests', label: 'Requests', icon: FileText },
+  { href: '/owner/activity-logs', label: 'Activity', icon: ClipboardList },
   { href: '/owner/settings', label: 'Settings', icon: Settings },
 ]
 
@@ -86,6 +88,10 @@ export function Sidebar({ locale, role, isCollapsed = false, onToggle }: Sidebar
       Users: 'Utilisateurs',
       Reports: 'Rapports',
       Settings: 'Paramètres',
+      Plans: 'Plans',
+      Subscriptions: 'Abonnements',
+      Requests: 'Demandes',
+      Activity: 'Activité',
       Residents: 'Résidents',
       Apartments: 'Appartements',
       Charges: 'Charges',
@@ -95,7 +101,6 @@ export function Sidebar({ locale, role, isCollapsed = false, onToggle }: Sidebar
       Documents: 'Documents',
       'My Charges': 'Mes charges',
       'My Payments': 'Mes paiements',
-      Requests: 'Demandes',
       Profile: 'Profil',
     },
     ar: {
@@ -106,6 +111,10 @@ export function Sidebar({ locale, role, isCollapsed = false, onToggle }: Sidebar
       Users: 'المستخدمون',
       Reports: 'التقارير',
       Settings: 'الإعدادات',
+      Plans: 'الخطط',
+      Subscriptions: 'الاشتراكات',
+      Requests: 'الطلبات',
+      Activity: 'النشاط',
       Residents: 'المقيمون',
       Apartments: 'الشقق',
       Charges: 'الرسوم',
@@ -115,7 +124,6 @@ export function Sidebar({ locale, role, isCollapsed = false, onToggle }: Sidebar
       Documents: 'المستندات',
       'My Charges': 'رسومي',
       'My Payments': 'مدفوعاتي',
-      Requests: 'الطلبات',
       Profile: 'الملف الشخصي',
     }
   }
