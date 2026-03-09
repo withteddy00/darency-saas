@@ -83,6 +83,8 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
       totalResidences: 'Résidences',
       totalAdmins: 'Administrateurs',
       totalResidents: 'Résidents',
+      totalOrganizations: 'Organisations',
+      activeSubscriptions: 'Abonnements actifs',
       totalApartments: 'Appartements',
       occupancyRate: 'Taux d\'occupation',
       unpaidCharges: 'Charges impayées',
@@ -113,6 +115,8 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
       totalResidences: 'العقارات',
       totalAdmins: 'المسؤولون',
       totalResidents: 'المقيمون',
+      totalOrganizations: 'المنظمات',
+      activeSubscriptions: 'الاشتراكات النشطة',
       totalApartments: 'الشقق',
       occupancyRate: 'معدل الإشغال',
       unpaidCharges: 'الرسوم غير المدفوعة',
@@ -143,67 +147,67 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
 
   // Use real data from API
   const stats = dashboardData ? [
-    { title: translations.totalResidences, value: String(dashboardData.stats.totalResidences), change: '', changeType: 'neutral' as const, icon: Building2, iconColor: 'text-primary' },
-    { title: translations.totalApartments, value: String(dashboardData.stats.totalApartments), change: '', changeType: 'neutral' as const, icon: Home, iconColor: 'text-secondary' },
-    { title: translations.totalResidents, value: String(dashboardData.stats.totalResidents), change: '', changeType: 'neutral' as const, icon: Users, iconColor: 'text-accent' },
-    { title: translations.occupancyRate, value: `${dashboardData.stats.occupancyRate}%`, change: '', changeType: 'neutral' as const, icon: TrendingUp, iconColor: 'text-success' },
+    { title: translations.totalResidences, value: String(dashboardData.stats.totalResidences || 0), change: '', changeType: 'neutral' as const, icon: Building2, iconColor: 'text-primary' },
+    { title: translations.totalOrganizations, value: String(dashboardData.stats.totalOrganizations || 0), change: '', changeType: 'neutral' as const, icon: Home, iconColor: 'text-secondary' },
+    { title: translations.totalResidents, value: String(dashboardData.stats.totalResidents || 0), change: '', changeType: 'neutral' as const, icon: Users, iconColor: 'text-accent' },
+    { title: translations.activeSubscriptions, value: String(dashboardData.stats.activeSubscriptions || 0), change: '', changeType: 'neutral' as const, icon: TrendingUp, iconColor: 'text-success' },
   ] : []
 
   const recentActivity = dashboardData ? [
-    ...dashboardData.recentPayments.slice(0, 3).map((p: any) => ({
-      id: p.id,
-      title: 'Paiement reçu',
-      description: `${formatCurrency(p.amount)} - Appartement ${p.apartment}`,
-      time: p.paidDate ? new Date(p.paidDate).toLocaleDateString('fr-FR') : '',
-      icon: CreditCard,
+    ...(dashboardData.recentRequests || []).slice(0, 3).map((r: any) => ({
+      id: r.id,
+      title: 'Nouvelle demande',
+      description: `${r.residenceName} - ${r.numberOfApartments} appartements`,
+      time: r.createdAt ? new Date(r.createdAt).toLocaleDateString('fr-FR') : '',
+      icon: FileText,
       iconColor: 'text-primary'
     })),
-    ...dashboardData.recentMaintenanceRequests.slice(0, 2).map((m: any) => ({
-      id: m.id,
-      title: m.title,
-      description: `Appartement ${m.apartment} - ${m.status}`,
-      time: new Date(m.createdAt).toLocaleDateString('fr-FR'),
-      icon: Wrench,
-      iconColor: 'text-warning'
+    ...(dashboardData.recentOrganizations || []).slice(0, 2).map((o: any) => ({
+      id: o.id,
+      title: 'Nouvelle organisation',
+      description: `${o.name} - ${o.plan}`,
+      time: o.createdAt ? new Date(o.createdAt).toLocaleDateString('fr-FR') : '',
+      icon: Building2,
+      iconColor: 'text-success'
     }))
   ] : []
 
-  const topResidences = dashboardData ? dashboardData.topResidences.map((r: any) => ({
+  const topResidences = dashboardData ? (dashboardData.topResidences || []).map((r: any) => ({
     name: r.name,
-    units: r.units,
-    occupancy: r.occupancy,
+    units: r.apartments,
+    occupancy: r.residents && r.apartments ? Math.round((r.residents / r.apartments) * 100) : 0,
     revenue: r.revenue
   })) : []
 
   // Build pending tasks from real data
   const pendingTasks: Array<{id: string, title: string, type: string, priority: 'low' | 'medium' | 'high'}> = []
 
-  // Add unpaid charges as pending tasks
-  if (dashboardData?.stats?.unpaidCharges > 0) {
+  // Add pending subscription requests as pending tasks
+  if (dashboardData?.stats?.pendingRequests > 0) {
     pendingTasks.push({
-      id: 'task-unpaid',
-      title: `Suivre les charges impayées: ${formatCurrency(dashboardData.stats.unpaidCharges)}`,
-      type: 'payment',
+      id: 'task-requests',
+      title: `${dashboardData.stats.pendingRequests} demande(s) d'abonnement en attente`,
+      type: 'subscription',
       priority: 'high'
     })
   }
 
-  // Add open maintenance requests as pending tasks
-  if (dashboardData?.stats?.openMaintenanceRequests > 0) {
+  // Add unpaid charges as pending tasks
+  if (dashboardData?.stats?.unpaidAmount > 0) {
     pendingTasks.push({
-      id: 'task-maintenance',
-      title: `${dashboardData.stats.openMaintenanceRequests} demande(s) de maintenance en attente`,
-      type: 'maintenance',
+      id: 'task-unpaid',
+      title: `Suivre les charges impayées: ${formatCurrency(dashboardData.stats.unpaidAmount)}`,
+      type: 'payment',
       priority: 'medium'
     })
   }
 
   // Calculate financial summary from dashboard data
   const financialSummary = dashboardData ? {
-    revenue: dashboardData.topResidences.reduce((sum: number, r: any) => sum + r.revenue, 0),
-    expenses: dashboardData.stats.unpaidCharges || 0,
-    netIncome: dashboardData.topResidences.reduce((sum: number, r: any) => sum + r.revenue, 0) - (dashboardData.stats.unpaidCharges || 0),
-    unpaidCharges: dashboardData.stats.unpaidCharges
+    revenue: dashboardData.stats.totalRevenue || 0,
+    expenses: dashboardData.stats.totalExpenses || 0,
+    netIncome: dashboardData.stats.netRevenue || 0,
+    unpaidCharges: dashboardData.stats.unpaidAmount || 0
   } : { revenue: 0, expenses: 0, netIncome: 0, unpaidCharges: 0 }
 
   return (
