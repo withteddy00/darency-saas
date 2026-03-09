@@ -99,10 +99,13 @@ export default function LandingPage() {
 
   const fetchPlans = async () => {
     try {
+      setLoadingPlans(true)
       const response = await fetch('/api/public/plans')
       if (response.ok) {
         const data = await response.json()
-        setPlans(data.plans)
+        setPlans(data.plans || [])
+      } else {
+        console.error('Failed to fetch plans:', response.status)
       }
     } catch (error) {
       console.error('Error fetching plans:', error)
