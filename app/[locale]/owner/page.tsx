@@ -344,7 +344,7 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
                   description="Gérer les plans tarifaires"
                 />
               </Link>
-              <Link href={`/${locale}/owner/admin-management`} className="block">
+              <Link href={`/${locale}/owner/admins`} className="block">
                 <QuickActionCard
                   icon={UserCog}
                   title={translations.manageAdmins}

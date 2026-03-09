@@ -45,6 +45,7 @@ const ownerNavItems: NavItem[] = [
   { href: '/owner/plans', label: 'Plans', icon: CreditCard },
   { href: '/owner/subscriptions', label: 'Subscriptions', icon: CheckCircle2 },
   { href: '/owner/subscription-requests', label: 'Requests', icon: FileText },
+  { href: '/owner/admins', label: 'Administrators', icon: Users },
   { href: '/owner/activity-logs', label: 'Activity', icon: ClipboardList },
   { href: '/owner/settings', label: 'Settings', icon: Settings },
 ]
@@ -92,6 +93,7 @@ export function Sidebar({ locale, role, isCollapsed = false, onToggle }: Sidebar
       Subscriptions: 'Abonnements',
       Requests: 'Demandes',
       Activity: 'Activité',
+      Administrators: 'Administrateurs',
       Residents: 'Résidents',
       Apartments: 'Appartements',
       Charges: 'Charges',
@@ -115,6 +117,7 @@ export function Sidebar({ locale, role, isCollapsed = false, onToggle }: Sidebar
       Subscriptions: 'الاشتراكات',
       Requests: 'الطلبات',
       Activity: 'النشاط',
+      Administrators: 'المسؤولون',
       Residents: 'المقيمون',
       Apartments: 'الشقق',
       Charges: 'الرسوم',
