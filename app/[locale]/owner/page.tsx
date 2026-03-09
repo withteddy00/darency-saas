@@ -211,7 +211,7 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
   } : { revenue: 0, expenses: 0, netIncome: 0, unpaidCharges: 0 }
 
   return (
-    <DashboardLayout locale={locale} role="OWNER">
+    <div>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -398,6 +398,6 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
           </div>
         </SectionCard>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

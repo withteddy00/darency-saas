@@ -18,7 +18,7 @@ import {
   Home,
   X
 } from 'lucide-react'
-import { DashboardLayout } from '@/components/dashboard'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -203,16 +203,16 @@ export default function OwnerAdminsPage({ params }: { params: { locale: string }
 
   if (loading) {
     return (
-      <DashboardLayout locale={locale} role="OWNER">
+      <div>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout locale={locale} role="OWNER">
+    <div>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -465,6 +465,6 @@ export default function OwnerAdminsPage({ params }: { params: { locale: string }
           </div>
         )}
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { DashboardLayout } from '@/components/dashboard'
+
 import { User, Building2, Shield, Bell, Save, Lock, Mail, Phone } from 'lucide-react'
 
 export default function OwnerSettingsPage({ params }: { params: { locale: string } }) {
@@ -144,11 +144,11 @@ export default function OwnerSettingsPage({ params }: { params: { locale: string
 
   if (status === 'loading') {
     return (
-      <DashboardLayout locale={locale} role="OWNER">
+      <div>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
@@ -163,7 +163,7 @@ export default function OwnerSettingsPage({ params }: { params: { locale: string
   ]
 
     return (
-      <DashboardLayout locale={locale} role="OWNER">
+      <div>
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-bold text-text-primary">{t.title}</h1>
@@ -362,6 +362,6 @@ export default function OwnerSettingsPage({ params }: { params: { locale: string
         </div>
       </div>
         </div>
-      </DashboardLayout>
+      </div>
     )
 }
