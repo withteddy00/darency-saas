@@ -153,8 +153,8 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
     { title: translations.activeSubscriptions, value: String(dashboardData.stats.activeSubscriptions || 0), change: '', changeType: 'neutral' as const, icon: TrendingUp, iconColor: 'text-success' },
   ] : []
 
-  const recentActivity = dashboardData ? [
-    ...(dashboardData.recentRequests || []).slice(0, 3).map((r: any) => ({
+  const recentActivity = [
+    ...(dashboardData?.recentRequests ?? []).slice(0, 3).map((r: any) => ({
       id: r.id,
       title: 'Nouvelle demande',
       description: `${r.residenceName} - ${r.numberOfApartments} appartements`,
@@ -162,7 +162,7 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
       icon: FileText,
       iconColor: 'text-primary'
     })),
-    ...(dashboardData.recentOrganizations || []).slice(0, 2).map((o: any) => ({
+    ...(dashboardData?.recentOrganizations ?? []).slice(0, 2).map((o: any) => ({
       id: o.id,
       title: 'Nouvelle organisation',
       description: `${o.name} - ${o.plan}`,
@@ -170,14 +170,14 @@ export default function OwnerDashboard({ params }: { params: { locale: string } 
       icon: Building2,
       iconColor: 'text-success'
     }))
-  ] : []
+  ]
 
-  const topResidences = dashboardData ? (dashboardData.topResidences || []).map((r: any) => ({
+  const topResidences = (dashboardData?.topResidences ?? []).map((r: any) => ({
     name: r.name,
     units: r.apartments,
     occupancy: r.residents && r.apartments ? Math.round((r.residents / r.apartments) * 100) : 0,
     revenue: r.revenue
-  })) : []
+  }))
 
   // Build pending tasks from real data
   const pendingTasks: Array<{id: string, title: string, type: string, priority: 'low' | 'medium' | 'high'}> = []
