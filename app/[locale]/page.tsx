@@ -183,7 +183,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up animate-stagger-2">
-              <Link href={`/${locale}/login`} className="btn-primary text-lg px-8 py-4">
+              <Link href={`/${locale}/subscribe`} className="btn-primary text-lg px-8 py-4">
                 {t('landing.hero.cta')}
                 <ArrowRightIcon className="inline-block ml-2 w-5 h-5" />
               </Link>
