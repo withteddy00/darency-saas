@@ -62,7 +62,10 @@ export async function middleware(request: NextRequest) {
   const hasLocale = ['fr', 'ar'].includes(pathParts[0])
   const pathWithoutLocale = hasLocale ? '/' + pathParts.slice(1).join('/') : pathname
   
-  const isPublicPage = publicPages.some(page => pathWithoutLocale === page || pathWithoutLocale.startsWith(`${page}/`))
+  // Remove query string for matching
+  const pathForMatching = pathWithoutLocale.split('?')[0]
+  
+  const isPublicPage = publicPages.some(page => pathForMatching === page || pathForMatching.startsWith(`${page}/`))
   if (isPublicPage) {
     return NextResponse.next()
   }
