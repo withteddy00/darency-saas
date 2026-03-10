@@ -25,7 +25,9 @@ const publicApiRoutes = [
 ]
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  // Get pathname and remove query string
+  let { pathname } = request.nextUrl
+  pathname = pathname.split('?')[0]  // Strip query string first
 
   // Allow static files
   if (
@@ -62,10 +64,7 @@ export async function middleware(request: NextRequest) {
   const hasLocale = ['fr', 'ar'].includes(pathParts[0])
   const pathWithoutLocale = hasLocale ? '/' + pathParts.slice(1).join('/') : pathname
   
-  // Remove query string for matching
-  const pathForMatching = pathWithoutLocale.split('?')[0]
-  
-  const isPublicPage = publicPages.some(page => pathForMatching === page || pathForMatching.startsWith(`${page}/`))
+  const isPublicPage = publicPages.some(page => pathWithoutLocale === page || pathWithoutLocale.startsWith(`${page}/`))
   if (isPublicPage) {
     return NextResponse.next()
   }
