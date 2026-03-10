@@ -8,6 +8,7 @@ import { Loader2, Check, Star } from 'lucide-react'
 interface Plan {
   id: string
   name: string
+  slug: string
   description: string
   monthlyPrice: number
   yearlyPrice: number | null
@@ -354,7 +355,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
                       ))}
                     </ul>
                     <Link
-                      href={`/${locale}/login`}
+                      href={`/${locale}/subscribe?plan=${plan.slug}`}
                       className={`block w-full py-3 px-6 rounded-xl font-semibold text-center transition-colors ${
                         plan.isPopular 
                           ? 'bg-primary text-white hover:bg-primary-dark' 
@@ -382,7 +383,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
             {t('landing.cta.subtitle')}
           </p>
           <Link
-            href={`/${locale}/login`}
+            href={`/${locale}/subscribe`}
             className="inline-flex items-center gap-2 bg-white text-primary px-8 py-4 rounded-xl font-semibold text-lg hover:bg-surface-elevated transition-colors"
           >
             {t('landing.cta.button')}

@@ -10,7 +10,7 @@ const roleRoutes: Record<string, string[]> = {
 }
 
 // Public routes that don't require authentication
-const publicRoutes = ['/', '/fr', '/ar']
+const publicRoutes = ['/', '/fr', '/ar', '/fr/subscribe', '/fr/payment-proof', '/ar/subscribe', '/ar/payment-proof']
 
 // Public page routes (with locale prefix)
 const publicPages = [
@@ -25,7 +25,9 @@ const publicApiRoutes = [
 ]
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  // Get pathname and remove query string
+  let { pathname } = request.nextUrl
+  pathname = pathname.split('?')[0]  // Strip query string first
 
   // Allow static files
   if (
@@ -132,8 +134,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    // Skip all internal paths (_next)
-    '/((?!_next|favicon.ico|api|.*\\..*).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
