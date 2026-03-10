@@ -90,7 +90,8 @@ export default function LandingPage() {
     phone: '',
     city: '',
     numberOfApartments: '',
-    planId: ''
+    planId: '',
+    billingCycle: 'monthly'
   })
 
   useEffect(() => {
@@ -128,7 +129,11 @@ export default function LandingPage() {
       const response = await fetch('/api/public/subscription-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, planId: selectedPlan?.id })
+        body: JSON.stringify({ 
+          ...formData, 
+          planId: selectedPlan?.id,
+          billingCycle 
+        })
       })
 
       if (response.ok) {
