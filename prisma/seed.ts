@@ -31,6 +31,101 @@ async function main() {
   console.log('✅ Created Organization:', org.name)
 
   // =====================================================
+  // CREATE SUBSCRIPTION PLANS
+  // =====================================================
+  
+  const plans = await Promise.all([
+    prisma.subscriptionPlan.create({
+      data: {
+        name: 'Starter',
+        slug: 'starter',
+        description: 'Parfait pour les petites résidences',
+        price: 299,
+        yearlyPrice: 2990,
+        billingCycle: 'MONTHLY',
+        features: JSON.stringify([
+          '1 résidence',
+          'Jusqu\'à 50 appartements',
+          'Gestion des résidents',
+          'Gestion des charges',
+          'Support par email',
+          'Application mobile'
+        ]),
+        maxResidences: 1,
+        maxAdmins: 2,
+        maxApartments: 50,
+        maxResidents: 100,
+        hasAdvancedReports: false,
+        hasPrioritySupport: false,
+        hasApiAccess: false,
+        isActive: true,
+        isVisible: true,
+        isPopular: false
+      }
+    }),
+    prisma.subscriptionPlan.create({
+      data: {
+        name: 'Pro',
+        slug: 'pro',
+        description: 'Idéal pour les résidences de taille moyenne',
+        price: 499,
+        yearlyPrice: 4990,
+        billingCycle: 'MONTHLY',
+        features: JSON.stringify([
+          '3 résidences',
+          'Jusqu\'à 150 appartements',
+          'Gestion complète',
+          'Rapports avancés',
+          'Support prioritaire',
+          'API Access',
+          'Application mobile'
+        ]),
+        maxResidences: 3,
+        maxAdmins: 5,
+        maxApartments: 150,
+        maxResidents: 300,
+        hasAdvancedReports: true,
+        hasPrioritySupport: true,
+        hasApiAccess: true,
+        isActive: true,
+        isVisible: true,
+        isPopular: true
+      }
+    }),
+    prisma.subscriptionPlan.create({
+      data: {
+        name: 'Enterprise',
+        slug: 'enterprise',
+        description: 'Pour les grandes propriétés et gestionnaires professionnels',
+        price: 999,
+        yearlyPrice: 9990,
+        billingCycle: 'MONTHLY',
+        features: JSON.stringify([
+          'Résidences illimitées',
+          'Apartments illimités',
+          'Gestion complète',
+          'Rapports avancés',
+          'Support dédié 24/7',
+          'API Access complet',
+          'Application mobile',
+          'Intégrations personnalisées'
+        ]),
+        maxResidences: 999,
+        maxAdmins: 20,
+        maxApartments: 9999,
+        maxResidents: 9999,
+        hasAdvancedReports: true,
+        hasPrioritySupport: true,
+        hasApiAccess: true,
+        isActive: true,
+        isVisible: true,
+        isPopular: false
+      }
+    })
+  ])
+  console.log('✅ Created Subscription Plans:', plans.map(p => p.name).join(', '))
+
+  // =====================================================
   // CREATE MULTIPLE RESIDENCES (for testing admin scoping)
   // =====================================================
   

@@ -309,6 +309,7 @@ model SubscriptionRequest {
   // Plan Selection
   planId          String
   plan            SubscriptionPlan @relation(fields: [planId], references: [id])
+  billingCycle    String   @default("monthly") // monthly, yearly
   // Request Status
   status          String   @default("PENDING") // PENDING, APPROVED, REJECTED, EXPIRED
   adminNotes      String?

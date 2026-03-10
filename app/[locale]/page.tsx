@@ -1,16 +1,55 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useTranslations } from '@/hooks/use-translations'
+import { Loader2, Check, Star } from 'lucide-react'
+
+interface Plan {
+  id: string
+  name: string
+  description: string
+  monthlyPrice: number
+  yearlyPrice: number | null
+  features: string[]
+  isPopular: boolean
+}
 
 export default function LandingPage({ params }: { params: { locale: string } }) {
   const { locale } = params
   const t = useTranslations(locale)
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false)
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [loadingPlans, setLoadingPlans] = useState(true)
 
   const toggleLanguage = (newLocale: string) => {
     window.location.href = `/${newLocale}`
+  }
+
+  useEffect(() => {
+    fetchPlans()
+  }, [])
+
+  const fetchPlans = async () => {
+    try {
+      setLoadingPlans(true)
+      const response = await fetch('/api/public/plans')
+      if (response.ok) {
+        const data = await response.json()
+        setPlans(data.plans || [])
+      }
+    } catch (error) {
+      console.error('Error fetching plans:', error)
+    } finally {
+      setLoadingPlans(false)
+    }
+  }
+
+  const getYearlySavings = (monthlyPrice: number, yearlyPrice: number | null) => {
+    if (!yearlyPrice) return 0
+    const monthlyEquivalent = yearlyPrice / 12
+    const savings = monthlyPrice - monthlyEquivalent
+    return Math.round((savings / monthlyPrice) * 100)
   }
 
   const features = [
@@ -232,6 +271,103 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-surface-elevated">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-heading font-bold text-text-primary mb-4">
+              Tarifs simples et transparents
+            </h2>
+            <p className="text-xl text-text-secondary max-w-2xl mx-auto">
+              {locale === 'fr' 
+                ? 'Choisissez le plan qui correspond à vos besoins' 
+                : locale === 'ar'
+                ? 'اختر الخطة التي تناسب احتياجاتك'
+                : 'Choose the plan that fits your needs'}
+            </p>
+          </div>
+
+          {loadingPlans ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : plans.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-text-secondary">
+                {locale === 'fr' 
+                  ? 'Aucun plan disponible pour le moment' 
+                  : locale === 'ar'
+                  ? 'لا توجد خطط متاحة حالياً'
+                  : 'No plans available at the moment'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {plans.map((plan) => {
+                const savings = getYearlySavings(plan.monthlyPrice, plan.yearlyPrice)
+                return (
+                  <div 
+                    key={plan.id}
+                    className={`relative bg-surface rounded-2xl p-8 border transition-all hover:shadow-xl ${
+                      plan.isPopular 
+                        ? 'border-primary shadow-xl shadow-primary/10 transform md:-translate-y-2' 
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    {plan.isPopular && (
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                        <Star className="w-4 h-4 fill-current" />
+                        {locale === 'fr' ? 'Populaire' : locale === 'ar' ? 'شائع' : 'Popular'}
+                      </div>
+                    )}
+                    <div className="text-center mb-6">
+                      <h3 className="text-2xl font-bold text-text-primary mb-2">{plan.name}</h3>
+                      <p className="text-text-secondary text-sm">{plan.description}</p>
+                    </div>
+                    <div className="text-center mb-6">
+                      <div className="flex items-baseline justify-center">
+                        <span className="text-4xl font-bold text-text-primary">
+                          {plan.monthlyPrice}
+                        </span>
+                        <span className="text-text-secondary ml-2">DH/{locale === 'fr' ? 'mois' : locale === 'ar' ? 'شهر' : 'mo'}</span>
+                      </div>
+                      {plan.yearlyPrice && (
+                        <div className="mt-2">
+                          <p className="text-text-primary font-medium">{plan.yearlyPrice.toLocaleString()} DH {locale === 'fr' ? 'annuel' : locale === 'ar' ? 'سنوي' : '/yr'}</p>
+                          {savings > 0 && (
+                            <p className="text-green-600 text-sm flex items-center justify-center gap-1">
+                              <Check className="w-4 h-4" /> {locale === 'fr' ? 'Économie' : locale === 'ar' ? 'توفير' : 'Save'} {savings}%
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <ul className="space-y-3 mb-8">
+                      {plan.features?.slice(0, 5).map((feature, index) => (
+                        <li key={index} className="flex items-start gap-2 text-text-secondary">
+                          <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link
+                      href={`/${locale}/login`}
+                      className={`block w-full py-3 px-6 rounded-xl font-semibold text-center transition-colors ${
+                        plan.isPopular 
+                          ? 'bg-primary text-white hover:bg-primary-dark' 
+                          : 'bg-surface-elevated text-text-primary hover:bg-primary hover:text-white border border-border'
+                      }`}
+                    >
+                      {locale === 'fr' ? 'Choisir ce plan' : locale === 'ar' ? 'اختر هذه الخطة' : 'Choose Plan'}
+                    </Link>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </section>
 

@@ -90,7 +90,8 @@ export default function LandingPage() {
     phone: '',
     city: '',
     numberOfApartments: '',
-    planId: ''
+    planId: '',
+    billingCycle: 'monthly'
   })
 
   useEffect(() => {
@@ -99,10 +100,13 @@ export default function LandingPage() {
 
   const fetchPlans = async () => {
     try {
+      setLoadingPlans(true)
       const response = await fetch('/api/public/plans')
       if (response.ok) {
         const data = await response.json()
-        setPlans(data.plans)
+        setPlans(data.plans || [])
+      } else {
+        console.error('Failed to fetch plans:', response.status)
       }
     } catch (error) {
       console.error('Error fetching plans:', error)
@@ -125,7 +129,11 @@ export default function LandingPage() {
       const response = await fetch('/api/public/subscription-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, planId: selectedPlan?.id })
+        body: JSON.stringify({ 
+          ...formData, 
+          planId: selectedPlan?.id,
+          billingCycle 
+        })
       })
 
       if (response.ok) {

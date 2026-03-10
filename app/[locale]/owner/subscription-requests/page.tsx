@@ -32,6 +32,7 @@ interface SubscriptionRequest {
     name: string
     price: number
   }
+  billingCycle: string
   status: string
   adminNotes: string | null
   createdAt: string
@@ -234,6 +235,7 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
                   <th className="px-4 py-3 text-left text-sm font-semibold text-text-secondary">{translations.organization}</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-text-secondary">{translations.email}</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-text-secondary">{translations.plan}</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-text-secondary">{locale === 'fr' ? 'Facturation' : locale === 'ar' ? 'الفوترة' : 'Billing'}</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-text-secondary">{translations.apartments}</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-text-secondary">{translations.requestDate}</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-text-secondary">{translations.status}</th>
@@ -243,7 +245,7 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
               <tbody className="divide-y divide-border">
                 {filteredRequests.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-text-tertiary">
+                    <td colSpan={8} className="px-4 py-8 text-center text-text-tertiary">
                       {translations.noRequests}
                     </td>
                   </tr>
@@ -263,6 +265,17 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
                       <td className="px-4 py-4 text-text-primary">
                         <span className="font-medium">{request.plan.name}</span>
                         <span className="text-text-tertiary ml-1">({request.plan.price} MAD)</span>
+                      </td>
+                      <td className="px-4 py-4 text-text-primary">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          request.billingCycle === 'yearly' 
+                            ? 'bg-blue-100 text-blue-700' 
+                            : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {request.billingCycle === 'yearly' 
+                            ? (locale === 'fr' ? 'Annuel' : locale === 'ar' ? 'سنوي' : 'Yearly')
+                            : (locale === 'fr' ? 'Mensuel' : locale === 'ar' ? 'شهري' : 'Monthly')}
+                        </span>
                       </td>
                       <td className="px-4 py-4 text-text-primary">{request.numberOfApartments}</td>
                       <td className="px-4 py-4 text-text-secondary">

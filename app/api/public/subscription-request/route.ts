@@ -13,6 +13,7 @@ export async function POST(request: Request) {
       city,
       numberOfApartments,
       planId,
+      billingCycle,
       notes
     } = body
 
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
         city,
         numberOfApartments: parseInt(numberOfApartments),
         planId,
+        billingCycle: billingCycle || 'monthly',
         status: 'PENDING',
         expiresAt
       }

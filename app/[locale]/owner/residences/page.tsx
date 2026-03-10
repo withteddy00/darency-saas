@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { DashboardLayout } from '@/components/dashboard'
+
 import { 
   Building2, MapPin, Users, Home, AlertCircle, CheckCircle2, 
   Clock, Search, Filter, Plus, X, ChevronDown, ChevronRight
@@ -286,11 +286,11 @@ export default function OwnerResidencesPage({ params }: { params: { locale: stri
 
   if (status === 'loading' || isLoading) {
     return (
-      <DashboardLayout locale={locale} role="OWNER">
+      <div>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
@@ -299,7 +299,7 @@ export default function OwnerResidencesPage({ params }: { params: { locale: stri
   }
 
   return (
-    <DashboardLayout locale={locale} role="OWNER">
+    <div>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -620,6 +620,6 @@ export default function OwnerResidencesPage({ params }: { params: { locale: stri
           </Card>
         </div>
       )}
-    </DashboardLayout>
+    </div>
   )
 }

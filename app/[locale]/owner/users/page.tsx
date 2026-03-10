@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { DashboardLayout } from '@/components/dashboard'
+
 import { Input } from '@/components/ui/input'
 import { 
   Users, Plus, X, Search, Filter, Mail, Phone, Building2,
@@ -312,26 +312,26 @@ export default function OwnerUsersPage({ params }: { params: { locale: string } 
 
   if (status === 'loading' || loading) {
     return (
-      <DashboardLayout locale={locale} role="OWNER">
+      <div>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   if (!session || session.user.role !== 'OWNER') {
     return (
-      <DashboardLayout locale={locale} role="OWNER">
+      <div>
         <div className="flex items-center justify-center h-64">
           <p className="text-text-secondary">Unauthorized</p>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout locale={locale} role="OWNER">
+    <div>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -560,6 +560,6 @@ export default function OwnerUsersPage({ params }: { params: { locale: string } 
           </Card>
         </div>
       )}
-    </DashboardLayout>
+    </div>
   )
 }
