@@ -19,20 +19,42 @@ import {
 
 interface SubscriptionRequest {
   id: string
-  firstName: string
-  lastName: string
+  // Contact / Account Information
+  fullName: string
   email: string
   phone: string
+  passwordTemp: string | null
+  preferredLanguage: string
+  // Residence / Organization Information
+  organizationName: string
   residenceName: string
-  residenceAddress: string
+  address: string
   city: string
+  country: string
+  numberOfBuildings: number
+  numberOfFloors: number
   numberOfApartments: number
+  estimatedNumberOfResidents: number | null
+  // Subscription Information
   plan: {
     id: string
     name: string
     price: number
-  }
+    yearlyPrice: number | null
+  } | null
+  selectedPlanSlug: string
   billingCycle: string
+  notes: string | null
+  // Business Information
+  ice: string | null
+  rc: string | null
+  taxId: string | null
+  website: string | null
+  // Payment Information
+  paymentReference: string
+  bankTransferProofUrl: string | null
+  bankTransferProofName: string | null
+  // Status
   status: string
   adminNotes: string | null
   createdAt: string
@@ -263,8 +285,16 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
                         <div className="text-sm text-text-tertiary">{request.phone}</div>
                       </td>
                       <td className="px-4 py-4 text-text-primary">
-                        <span className="font-medium">{request.plan.name}</span>
-                        <span className="text-text-tertiary ml-1">({request.plan.price} MAD)</span>
+                        {request.plan ? (
+                          <>
+                            <span className="font-medium">{request.plan.name}</span>
+                            <span className="text-text-tertiary ml-1">
+                              ({request.billingCycle === 'yearly' && request.plan.yearlyPrice ? request.plan.yearlyPrice : request.plan.price} MAD)
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-text-tertiary">{request.selectedPlanSlug}</span>
+                        )}
                       </td>
                       <td className="px-4 py-4 text-text-primary">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${

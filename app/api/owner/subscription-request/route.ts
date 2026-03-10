@@ -1,25 +1,58 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { randomBytes } from 'crypto'
+
+// Generate payment reference
+function generatePaymentReference(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const random = randomBytes(3).toString('hex').toUpperCase()
+  return `DRN-${year}${month}${day}-${random}`
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const {
-      firstName,
-      lastName,
+      fullName,
       email,
       phone,
+      organizationName,
       residenceName,
-      residenceAddress,
+      address,
       city,
+      country,
+      numberOfBuildings,
+      numberOfFloors,
       numberOfApartments,
       planId,
+      billingCycle,
+      notes,
+      ice,
+      rc,
+      taxId,
+      website
     } = body
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !phone || !residenceName || !residenceAddress || !city || !numberOfApartments || !planId) {
+    if (!fullName || !email || !phone || !organizationName || !residenceName || !address || !city || !numberOfApartments) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
+
+    // Get plan if provided
+    let plan = null
+    if (planId) {
+      plan = await prisma.subscriptionPlan.findUnique({
+        where: { id: planId, isActive: true }
+      })
+    }
+
+    // Split full name
+    const nameParts = fullName.trim().split(' ')
+    const firstName = nameParts[0] || ''
+    const lastName = nameParts.slice(1).join(' ') || ''
 
     // Check if email already exists in a subscription request
     const existingRequest = await prisma.subscriptionRequest.findFirst({
@@ -30,18 +63,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'A request with this email already exists' }, { status: 400 })
     }
 
+    // Generate payment reference
+    const paymentReference = generatePaymentReference()
+
     // Create the subscription request
     const subscriptionRequest = await prisma.subscriptionRequest.create({
       data: {
-        firstName,
-        lastName,
+        fullName,
         email,
         phone,
+        organizationName,
         residenceName,
-        residenceAddress,
+        address,
         city,
-        numberOfApartments,
-        planId,
+        country: country || 'Maroc',
+        numberOfBuildings: numberOfBuildings || 1,
+        numberOfFloors: numberOfFloors || 1,
+        numberOfApartments: parseInt(String(numberOfApartments)),
+        planId: planId || null,
+        selectedPlanSlug: plan?.slug || planId || 'unknown',
+        billingCycle: billingCycle || 'monthly',
+        notes: notes || null,
+        ice: ice || null,
+        rc: rc || null,
+        taxId: taxId || null,
+        website: website || null,
+        paymentReference,
         status: 'PENDING',
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
       },
@@ -52,7 +99,7 @@ export async function POST(request: Request) {
       data: {
         subscriptionRequestId: subscriptionRequest.id,
         action: 'CREATED',
-        description: `Demande d'abonnement créée pour ${residenceName}`,
+        description: `Demande d'abonnement créée pour ${organizationName || residenceName}`,
       },
     })
 

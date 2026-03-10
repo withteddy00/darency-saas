@@ -12,16 +12,37 @@ const roleRoutes: Record<string, string[]> = {
 // Public routes that don't require authentication
 const publicRoutes = ['/', '/fr', '/ar']
 
+// Public page routes (with locale prefix)
+const publicPages = [
+  '/subscribe',
+  '/payment-proof',
+  '/login',
+]
+
+// API public routes
+const publicApiRoutes = [
+  '/api/public',
+]
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow static files, API routes
+  // Allow static files
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
     pathname.includes('.') ||
     pathname.startsWith('/favicon.ico')
   ) {
+    return NextResponse.next()
+  }
+
+  // Allow public API routes
+  if (pathname.startsWith('/api/public')) {
+    return NextResponse.next()
+  }
+
+  // Handle API routes (not public) - let them through for auth check in handlers
+  if (pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
 
@@ -32,6 +53,17 @@ export async function middleware(request: NextRequest) {
 
   // Allow public routes (landing pages)
   if (publicRoutes.includes(pathname)) {
+    return NextResponse.next()
+  }
+
+  // Check if pathname is a public page (e.g., /fr/subscribe, /fr/payment-proof)
+  // Extract locale from pathname if present
+  const pathParts = pathname.split('/').filter(Boolean)
+  const hasLocale = ['fr', 'ar'].includes(pathParts[0])
+  const pathWithoutLocale = hasLocale ? '/' + pathParts.slice(1).join('/') : pathname
+  
+  const isPublicPage = publicPages.some(page => pathWithoutLocale === page || pathWithoutLocale.startsWith(`${page}/`))
+  if (isPublicPage) {
     return NextResponse.next()
   }
 

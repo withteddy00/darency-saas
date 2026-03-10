@@ -23,19 +23,34 @@ export async function GET() {
     return NextResponse.json({
       requests: requests.map(r => ({
         id: r.id,
-        firstName: r.firstName,
-        lastName: r.lastName,
+        fullName: r.fullName,
         email: r.email,
         phone: r.phone,
+        passwordTemp: r.passwordTemp,
+        preferredLanguage: r.preferredLanguage,
+        organizationName: r.organizationName,
         residenceName: r.residenceName,
-        residenceAddress: r.residenceAddress,
+        address: r.address,
         city: r.city,
+        country: r.country,
+        numberOfBuildings: r.numberOfBuildings,
+        numberOfFloors: r.numberOfFloors,
         numberOfApartments: r.numberOfApartments,
-        plan: {
+        estimatedNumberOfResidents: r.estimatedNumberOfResidents,
+        plan: r.plan ? {
           id: r.plan.id,
           name: r.plan.name,
-          price: r.plan.price
-        },
+          price: r.plan.price,
+          yearlyPrice: r.plan.yearlyPrice
+        } : null,
+        selectedPlanSlug: r.selectedPlanSlug,
+        billingCycle: r.billingCycle,
+        notes: r.notes,
+        ice: r.ice,
+        rc: r.rc,
+        taxId: r.taxId,
+        website: r.website,
+        paymentReference: r.paymentReference,
         status: r.status,
         adminNotes: r.adminNotes,
         createdAt: r.createdAt.toISOString(),
@@ -121,11 +136,11 @@ export async function POST(request: Request) {
     // Create organization with the plan
     const organization = await prisma.organization.create({
       data: {
-        name: subscriptionRequest.residenceName,
-        slug: subscriptionRequest.residenceName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+        name: subscriptionRequest.organizationName || subscriptionRequest.residenceName,
+        slug: (subscriptionRequest.organizationName || subscriptionRequest.residenceName).toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
         email: subscriptionRequest.email,
         phone: subscriptionRequest.phone,
-        address: subscriptionRequest.residenceAddress,
+        address: subscriptionRequest.address,
         city: subscriptionRequest.city,
         planId: subscriptionRequest.planId,
         subscriptionStatus: 'ACTIVE',
@@ -138,7 +153,7 @@ export async function POST(request: Request) {
     const residence = await prisma.residence.create({
       data: {
         name: subscriptionRequest.residenceName,
-        address: subscriptionRequest.residenceAddress,
+        address: subscriptionRequest.address,
         city: subscriptionRequest.city,
         numberOfApartments: subscriptionRequest.numberOfApartments,
         status: 'ACTIVE',
@@ -151,7 +166,7 @@ export async function POST(request: Request) {
       data: {
         email: subscriptionRequest.email,
         password: hashedPassword,
-        name: `${subscriptionRequest.firstName} ${subscriptionRequest.lastName}`,
+        name: subscriptionRequest.fullName,
         phone: subscriptionRequest.phone,
         role: 'ADMIN',
         organizationId: organization.id,
