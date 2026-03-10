@@ -47,16 +47,59 @@ export default function SubscribePage() {
   }
 
   if (success) {
+    const amount = billingCycle === 'yearly' && selectedPlan?.yearlyPrice ? selectedPlan.yearlyPrice : selectedPlan?.monthlyPrice
     return (
       <div className="min-h-screen bg-green-50 py-12 px-4">
-        <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 text-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+        <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+          <div className="text-center mb-6">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Demande envoyee!</h1>
+            <p className="text-gray-600">Votre demande a ete enregistree. Voici les details pour le paiement:</p>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Demande envoyee!</h1>
-          <p className="text-gray-600 mb-2">Reference: <span className="font-mono font-bold">{paymentRef}</span></p>
-          <p className="text-sm text-gray-500 mb-6">Montant: {billingCycle === 'yearly' && selectedPlan?.yearlyPrice ? selectedPlan.yearlyPrice : selectedPlan?.monthlyPrice} MAD</p>
-          <button onClick={() => router.push(`/fr/payment-proof?ref=${paymentRef}`)} className="px-6 py-3 bg-primary text-white rounded-lg">Telecharger preuve</button>
+          
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6 mb-6">
+            <h2 className="text-lg font-semibold text-amber-800 mb-4">Reference de paiement</h2>
+            <p className="text-4xl font-mono font-bold text-center text-amber-900">{paymentRef}</p>
+            <p className="text-center text-amber-700 text-sm mt-2">Incluez cette reference dans votre virement</p>
+          </div>
+
+          <div className="border border-gray-200 rounded-xl p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Informations pour le virement</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">Montant:</span>
+                <span className="font-bold text-gray-900">{amount} MAD</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">Beneficiaire:</span>
+                <span className="font-medium">DARENCY</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">Banque:</span>
+                <span className="font-medium">Banque Populaire</span>
+              </div>
+              <div className="flex justify-between py-2">
+                <span className="text-gray-500">RIB:</span>
+                <span className="font-mono text-sm">123456789012345678901234</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
+            <h2 className="text-lg font-semibold text-blue-800 mb-3">Prochaines etapes</h2>
+            <ol className="space-y-2 text-sm text-blue-700">
+              <li>1. Effectuez le virement de <strong>{amount} MAD</strong></li>
+              <li>2. Incluez la reference <strong>{paymentRef}</strong></li>
+              <li>3. Telechargez la preuve de virement ci-dessous</li>
+              <li>4. Validation sous 24-48h</li>
+            </ol>
+          </div>
+
+          <button onClick={() => router.push(`/fr/payment-proof?ref=${paymentRef}`)} className="w-full px-6 py-3 bg-primary text-white rounded-lg font-medium">
+            Telecharger la preuve de virement
+          </button>
         </div>
       </div>
     )
