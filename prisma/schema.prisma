@@ -296,26 +296,55 @@ model MaintenanceRequest {
 // Subscription Request - tracks subscription requests from potential clients
 model SubscriptionRequest {
   id              String   @id @default(cuid())
-  // Client Information
-  firstName       String
-  lastName        String
+  
+  // Contact / Account Information
+  fullName        String
   email           String
   phone           String
-  // Residence Information
+  passwordTemp    String?  // Optional temporary password chosen by user
+  preferredLanguage String @default("fr") // fr, ar, en
+  
+  // Residence / Organization Information
+  organizationName String
   residenceName   String
-  residenceAddress String
+  address         String
   city            String
+  country         String   @default("Maroc")
+  numberOfBuildings Int    @default(1)
+  numberOfFloors  Int      @default(1)
   numberOfApartments Int
-  // Plan Selection
-  planId          String
-  plan            SubscriptionPlan @relation(fields: [planId], references: [id])
+  estimatedNumberOfResidents Int?
+  
+  // Subscription Information
+  planId          String?
+  plan            SubscriptionPlan? @relation(fields: [planId], references: [id])
+  selectedPlanSlug String   // Store plan slug for reference
   billingCycle    String   @default("monthly") // monthly, yearly
+  notes           String?
+  
+  // Optional Business Information
+  ice             String?
+  rc              String?
+  taxId           String?
+  website         String?
+  
+  // Payment Information
+  paymentReference String   @unique // DRN-YYYYMMDD-XXXXXX
+  bankTransferProofUrl String?
+  bankTransferProofName String?
+  bankTransferProofMimeType String?
+  bankTransferUploadedAt DateTime?
+  
   // Request Status
-  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED, EXPIRED
+  status          String   @default("PENDING") 
+  // PENDING -> WAITING_PAYMENT -> PAYMENT_PROOF_UPLOADED -> PAID -> APPROVED
+  // or PENDING -> REJECTED, PENDING -> EXPIRED
   adminNotes      String?
+  
   // Account Creation (when approved)
-  password        String?  // Generated temporary password
+  password        String?  // Generated temporary password (if not provided by user)
   activatedAt     DateTime?
+  
   // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -404,4 +433,25 @@ model ActivityLog {
   
   // Timestamps
   createdAt   DateTime @default(now())
+}
+
+
+// OwnerSettings - Global owner/platform settings including bank information
+model OwnerSettings {
+  id                    String   @id @default(cuid())
+  
+  // Bank Transfer Information
+  bankAccountHolder     String?
+  bankName              String?
+  bankRib               String?
+  bankIban              String?
+  bankSwift             String?
+  
+  // Billing Support
+  billingSupportEmail   String?
+  billingSupportPhone   String?
+  
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }

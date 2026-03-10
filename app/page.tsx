@@ -116,9 +116,8 @@ export default function LandingPage() {
   }
 
   const handlePlanSelect = (plan: Plan) => {
-    setSelectedPlan(plan)
-    setFormData(prev => ({ ...prev, planId: plan.id }))
-    setShowModal(true)
+    // Redirect to subscribe page with plan slug (default to fr locale)
+    window.location.href = `/fr/subscribe?plan=${plan.slug}`
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -129,13 +129,18 @@ export async function GET() {
       monthlyRevenue,
       recentRequests: recentRequests.map(r => ({
         id: r.id,
-        firstName: r.firstName,
-        lastName: r.lastName,
+        fullName: r.fullName,
         email: r.email,
+        phone: r.phone,
+        organizationName: r.organizationName,
         residenceName: r.residenceName,
         city: r.city,
         numberOfApartments: r.numberOfApartments,
-        plan: r.plan.name,
+        selectedPlanSlug: r.selectedPlanSlug,
+        billingCycle: r.billingCycle,
+        status: r.status,
+        paymentReference: r.paymentReference,
+        plan: r.plan?.name || r.selectedPlanSlug,
         createdAt: r.createdAt.toISOString()
       })),
       recentOrganizations: recentOrganizations.map(o => ({
