@@ -271,6 +271,12 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('Error processing subscription request:', error)
-    return NextResponse.json({ error: 'Failed to process request' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : ''
+    return NextResponse.json({ 
+      error: 'Failed to process request',
+      details: errorMessage,
+      stack: process.env.NODE_ENV === 'development' ? errorStack : undefined
+    }, { status: 500 })
   }
 }
