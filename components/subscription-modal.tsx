@@ -30,6 +30,7 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
     fullName: '',
     email: '',
     phone: '',
+    organizationName: '',
     residenceName: '',
     city: '',
     address: '',
@@ -95,6 +96,9 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
     }
     if (!formData.residenceName.trim()) {
       newErrors.residenceName = locale === 'fr' ? 'Le nom de la résidence est requis' : locale === 'ar' ? 'اسم العقار مطلوب' : 'Residence name is required'
+    }
+    if (!formData.organizationName.trim()) {
+      newErrors.organizationName = locale === 'fr' ? 'Le nom de l\'organisation est requis' : locale === 'ar' ? 'اسم المنظمة مطلوب' : 'Organization name is required'
     }
     if (!formData.city.trim()) {
       newErrors.city = locale === 'fr' ? 'La ville est requise' : locale === 'ar' ? 'المدينة مطلوبة' : 'City is required'
@@ -209,6 +213,7 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
       fullName: 'Nom complet',
       email: 'Email',
       phone: 'Téléphone',
+      organizationName: 'Nom de l\'organisation',
       residenceName: 'Nom de la résidence',
       city: 'Ville',
       address: 'Adresse',
@@ -242,6 +247,7 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
       fullName: 'الاسم الكامل',
       email: 'البريد الإلكتروني',
       phone: 'الهاتف',
+      organizationName: 'اسم المنظمة',
       residenceName: 'اسم العقار',
       city: 'المدينة',
       address: 'العنوان',
@@ -275,6 +281,7 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
       fullName: 'Full Name',
       email: 'Email',
       phone: 'Phone',
+      organizationName: 'Organization Name',
       residenceName: 'Residence Name',
       city: 'City',
       address: 'Address',
@@ -441,6 +448,24 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
                   />
                   {errors.phone && <p className="text-error text-sm mt-1">{errors.phone}</p>}
                 </div>
+              </div>
+
+              {/* Organization Name */}
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  {translations.organizationName} *
+                </label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+                  <input
+                    type="text"
+                    value={formData.organizationName}
+                    onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
+                    className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.organizationName ? 'border-error' : 'border-border'} bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/50`}
+                    placeholder={translations.organizationName}
+                  />
+                </div>
+                {errors.organizationName && <p className="text-error text-sm mt-1">{errors.organizationName}</p>}
               </div>
 
               {/* Residence Name */}
