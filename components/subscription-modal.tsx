@@ -25,6 +25,7 @@ interface SubscriptionModalProps {
 export function SubscriptionModal({ isOpen, onClose, plan, locale }: SubscriptionModalProps) {
   const [step, setStep] = useState<'form' | 'payment' | 'success'>('form')
   const [loading, setLoading] = useState(false)
+  const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY')
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -132,6 +133,7 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
           numberOfApartments: parseInt(formData.numberOfApartments),
           planId: plan?.id,
           selectedPlanSlug: plan?.slug,
+          billingCycle: billingCycle,
           preferredLanguage: locale
         })
       })
@@ -303,7 +305,13 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
   }
 
   const translations = t[locale as keyof typeof t] || t.fr
-  const price = plan?.yearlyPrice ? Math.round(plan.yearlyPrice / 12) : plan?.monthlyPrice
+  const price = billingCycle === 'YEARLY' && plan?.yearlyPrice 
+    ? Math.round(plan.yearlyPrice / 12) 
+    : plan?.monthlyPrice
+  
+  const fullPrice = billingCycle === 'YEARLY' && plan?.yearlyPrice 
+    ? plan.yearlyPrice 
+    : plan?.monthlyPrice
 
   if (!isOpen) return null
 
@@ -340,10 +348,10 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
           {step === 'form' && (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-4">
               {/* Selected Plan Badge */}
               {plan && (
-                <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 mb-6">
+                <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 mb-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-text-secondary">{translations.selectedPlan}</p>
@@ -351,7 +359,40 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-text-primary">{price} DH</p>
-                      <p className="text-sm text-text-secondary">/{translations.monthly}</p>
+                      <p className="text-sm text-text-secondary">/{billingCycle === 'MONTHLY' ? (locale === 'fr' ? 'mois' : locale === 'ar' ? 'شهر' : 'month') : (locale === 'fr' ? 'an' : locale === 'ar' ? 'سنة' : 'year')}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Billing Cycle Selector */}
+                  <div className="mt-4">
+                    <div className="flex bg-surface rounded-lg p-1 border border-border">
+                      <button
+                        type="button"
+                        onClick={() => setBillingCycle('MONTHLY')}
+                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                          billingCycle === 'MONTHLY'
+                            ? 'bg-primary text-white'
+                            : 'text-text-secondary hover:text-text-primary'
+                        }`}
+                      >
+                        {locale === 'fr' ? 'Mensuel' : locale === 'ar' ? 'شهري' : 'Monthly'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBillingCycle('YEARLY')}
+                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                          billingCycle === 'YEARLY'
+                            ? 'bg-primary text-white'
+                            : 'text-text-secondary hover:text-text-primary'
+                        }`}
+                      >
+                        {locale === 'fr' ? 'Annuel' : locale === 'ar' ? 'سنوي' : 'Yearly'}
+                        {plan.yearlyPrice && (
+                          <span className="block text-xs opacity-75">
+                            {locale === 'fr' ? 'Économie' : locale === 'ar' ? 'توفير' : 'Save'} {Math.round((1 - plan.yearlyPrice / (plan.monthlyPrice * 12)) * 100)}%
+                          </span>
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -502,7 +543,7 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
                 {locale === 'fr' ? 'Continuer vers le paiement' : locale === 'ar' ? 'المتابعة للدفع' : 'Continue to Payment'}
                 <ArrowRight className="w-5 h-5" />
               </button>
-            </form>
+            </div>
           )}
 
           {step === 'payment' && (
@@ -540,7 +581,12 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
                   </div>
                   <div className="flex justify-between py-2">
                     <span className="text-text-secondary">{locale === 'fr' ? 'Montant' : locale === 'ar' ? 'المبلغ' : 'Amount'}</span>
-                    <span className="font-bold text-xl text-primary">{price} MAD</span>
+                    <span className="font-bold text-xl text-primary">
+                      {fullPrice} MAD
+                      <span className="text-sm font-normal text-text-secondary ml-1">
+                        /{billingCycle === 'MONTHLY' ? (locale === 'fr' ? 'mois' : locale === 'ar' ? 'شهر' : 'mo') : (locale === 'fr' ? 'an' : locale === 'ar' ? 'سنة' : 'yr')}
+                      </span>
+                    </span>
                   </div>
                 </div>
               </div>
