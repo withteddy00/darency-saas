@@ -84,6 +84,35 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
+    // Email validation - Check if email already exists in User table
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    })
+
+    if (existingUser) {
+      return NextResponse.json({
+        error: 'This email is already in use. Please log in or use another email.',
+        code: 'EMAIL_EXISTS_IN_USER'
+      }, { status: 400 })
+    }
+
+    // Check if there's already a pending or waiting subscription request with the same email
+    const existingRequest = await prisma.subscriptionRequest.findFirst({
+      where: {
+        email: email.toLowerCase(),
+        status: {
+          in: ['PENDING', 'WAITING_PAYMENT']
+        }
+      }
+    })
+
+    if (existingRequest) {
+      return NextResponse.json({
+        error: 'A subscription request with this email already exists and is under review.',
+        code: 'REQUEST_EXISTS'
+      }, { status: 400 })
+    }
+
     // Split full name into first and last name
     const nameParts = fullName.trim().split(' ')
     const firstName = nameParts[0] || ''
