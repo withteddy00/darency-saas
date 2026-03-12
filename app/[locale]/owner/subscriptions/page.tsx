@@ -29,6 +29,7 @@ interface Subscription {
     id: string
     name: string
     price: number
+    billingCycle: string
   } | null
   subscriptionStatus: string
   planStartDate: string
@@ -365,7 +366,7 @@ export default function SubscriptionsManagementPage({ params }: { params: { loca
                         {sub.plan ? (
                           <div>
                             <div className="font-medium text-text-primary">{sub.plan.name}</div>
-                            <div className="text-sm text-text-tertiary">{sub.plan.price} MAD/mois</div>
+                            <div className="text-sm text-text-tertiary">{sub.plan.price} MAD/{sub.plan.billingCycle === 'YEARLY' ? 'an' : 'mois'}</div>
                           </div>
                         ) : (
                           <span className="text-text-tertiary">Aucun</span>

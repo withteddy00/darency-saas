@@ -67,7 +67,8 @@ export async function GET(request: Request) {
         plan: org.plan ? {
           id: org.plan.id,
           name: org.plan.name,
-          price: activeSubscription?.price || org.plan.price
+          price: activeSubscription?.price || org.plan.price,
+          billingCycle: activeSubscription?.billingCycle || org.billingCycle || 'MONTHLY'
         } : null,
         subscriptionStatus: org.subscriptionStatus,
         planStartDate: activeSubscription?.startDate?.toISOString() || org.planStartDate.toISOString(),
