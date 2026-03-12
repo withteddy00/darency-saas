@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useTranslations } from '@/hooks/use-translations'
-import { Loader2, Check, Star } from 'lucide-react'
+import { Loader2, Check, Star, Building2, Users, Shield, Crown, Home, Wrench, Bell, CreditCard, FileText, BarChart3, ArrowRight, Play } from 'lucide-react'
+import { SubscriptionModal } from '@/components/subscription-modal'
 
 interface Plan {
   id: string
@@ -22,9 +23,16 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false)
   const [plans, setPlans] = useState<Plan[]>([])
   const [loadingPlans, setLoadingPlans] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
 
   const toggleLanguage = (newLocale: string) => {
     window.location.href = `/${newLocale}`
+  }
+
+  const handlePlanSelect = (plan: Plan) => {
+    setSelectedPlan(plan)
+    setIsModalOpen(true)
   }
 
   useEffect(() => {
@@ -57,34 +65,127 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
     {
       key: 'buildings',
       icon: <BuildingsIcon />,
+      title: locale === 'fr' ? 'Gestion des résidences' : locale === 'ar' ? 'إدارة العقارات' : 'Residence Management',
+      description: locale === 'fr' ? 'Gérez plusieurs résidences, immeubles et appartements depuis une seule plateforme centralisée.' : locale === 'ar' ? 'إدارة عدة عقارات ومبانٍ وشقق من منصة مركزية واحدة.' : 'Manage multiple residences, buildings, and apartments from a single centralized platform.'
     },
     {
       key: 'residents',
       icon: <ResidentsIcon />,
+      title: locale === 'fr' ? 'Suivi des résidents' : locale === 'ar' ? 'تتبع المقيمين' : 'Resident Tracking',
+      description: locale === 'fr' ? 'Gardez un registre précis de tous les résidents, leur historique et leurs coordonnées.' : locale === 'ar' ? 'احتفظ بسجل دقيق لجميع المقيمين وتفاصيلهم ومعلوماتهم.' : 'Keep accurate records of all residents, their history, and contact information.'
     },
     {
       key: 'finances',
       icon: <FinancesIcon />,
+      title: locale === 'fr' ? 'Gestion financière' : locale === 'ar' ? 'الإدارة المالية' : 'Financial Management',
+      description: locale === 'fr' ? 'Suivez les charges, les paiements et générez des rapports financiers détaillés.' : locale === 'ar' ? 'تتبع الرسوم والمدفوعات وأنشئ تقارير مالية مفصلة.' : 'Track charges, payments, and generate detailed financial reports.'
     },
     {
       key: 'maintenance',
       icon: <MaintenanceIcon />,
+      title: locale === 'fr' ? 'Demandes de maintenance' : locale === 'ar' ? 'طلبات الصيانة' : 'Maintenance Requests',
+      description: locale === 'fr' ? 'Gérez les demandes de maintenance des résidents avec un suivi complet.' : locale === 'ar' ? 'إدارة طلبات الصيانة من المقيمين مع متابعة شاملة.' : 'Manage resident maintenance requests with complete tracking.'
     },
     {
       key: 'communication',
       icon: <CommunicationIcon />,
+      title: locale === 'fr' ? 'Communication' : locale === 'ar' ? 'التواصل' : 'Communication',
+      description: locale === 'fr' ? 'Envoyez des annonces et communiquez facilement avec tous les résidents.' : locale === 'ar' ? 'أرسل الإعلانات وتواصل بسهولة مع جميع المقيمين.' : 'Send announcements and easily communicate with all residents.'
     },
     {
       key: 'reports',
       icon: <ReportsIcon />,
+      title: locale === 'fr' ? 'Rapports analytics' : locale === 'ar' ? 'تقارير تحليلية' : 'Analytics Reports',
+      description: locale === 'fr' ? 'Accédez à des tableaux de bord analytics et des rapports détaillés.' : locale === 'ar' ? 'الوصول إلى لوحات المعلومات والتحارير المفصلة.' : 'Access analytics dashboards and detailed reports.'
+    },
+  ]
+
+  // Role definitions for the roles section
+  const roles = [
+    {
+      key: 'owner',
+      icon: Crown,
+      color: 'bg-gradient-to-br from-amber-500 to-orange-600',
+      title: locale === 'fr' ? 'Propriétaire' : locale === 'ar' ? 'المالك' : 'Owner',
+      description: locale === 'fr' 
+        ? 'Paissez gérer l\'ensemble de la plateforme. Accédez aux statistiques globales, gérez les organisations, les plans et surveillez l\'activité.' 
+        : locale === 'ar' 
+        ? 'قم بإدارة المنصة بالكامل. الوصول إلى الإحصائيات العالمية وإدارة الخطط ومراقبة النشاط.'
+        : 'Manage the entire platform. Access global statistics, manage organizations, plans, and monitor activity.',
+      features: [
+        locale === 'fr' ? 'Tableau de bord global' : locale === 'ar' ? 'لوحة القيادة العالمية' : 'Global dashboard',
+        locale === 'fr' ? 'Gestion des organisations' : locale === 'ar' ? 'إدارة المنظمات' : 'Organization management',
+        locale === 'fr' ? 'Gestion des plans tarifaires' : locale === 'ar' ? 'إدارة الخطط التسعيرية' : 'Plan management',
+        locale === 'fr' ? 'Suivi des abonnements' : locale === 'ar' ? 'تتبع الاشتراكات' : 'Subscription tracking',
+        locale === 'fr' ? 'Rapports financiers globaux' : locale === 'ar' ? 'التقارير المالية العالمية' : 'Global financial reports',
+      ]
+    },
+    {
+      key: 'admin',
+      icon: Shield,
+      color: 'bg-gradient-to-br from-blue-500 to-indigo-600',
+      title: locale === 'fr' ? 'Administrateur (Syndic)' : locale === 'ar' ? 'المسؤول (المُ syndic)' : 'Administrator (Syndic)',
+      description: locale === 'fr' 
+        ? 'Gérez une résidence spécifique. Coordonnées, résidents, charges, paiements et demandes de maintenance.' 
+        : locale === 'ar' 
+        ? 'إدارة عقار معين. التنسيق والمقيمين والرسوم والمدفوعات وطلبات الصيانة.'
+        : 'Manage a specific residence. Coordinate residents, charges, payments, and maintenance requests.',
+      features: [
+        locale === 'fr' ? 'Gestion d\'une résidence' : locale === 'ar' ? 'إدارة العقار' : 'Residence management',
+        locale === 'fr' ? 'Gestion des appartements' : locale === 'ar' ? 'إدارة الشقق' : 'Apartment management',
+        locale === 'fr' ? 'Suivi des paiements' : locale === 'ar' ? 'تتبع المدفوعات' : 'Payment tracking',
+        locale === 'fr' ? 'Demandes de maintenance' : locale === 'ar' ? 'طلبات الصيانة' : 'Maintenance requests',
+        locale === 'fr' ? 'Annonces aux résidents' : locale === 'ar' ? 'إعلانات للمقيمين' : 'Resident announcements',
+      ]
+    },
+    {
+      key: 'resident',
+      icon: Home,
+      color: 'bg-gradient-to-br from-emerald-500 to-teal-600',
+      title: locale === 'fr' ? 'Résident' : locale === 'ar' ? 'المقيم' : 'Resident',
+      description: locale === 'fr' 
+        ? 'Accédez à votre espace personnel. Consultez vos charges, effectuez vos paiements et soumettez des demandes.' 
+        : locale === 'ar' 
+        ? 'الوصول إلى مساحتك الشخصية. عرض الرسوم وتقديم الطلبات.'
+        : 'Access your personal space. View charges, make payments, and submit requests.',
+      features: [
+        locale === 'fr' ? 'Consultation des charges' : locale === 'ar' ? 'عرض الرسوم' : 'View charges',
+        locale === 'fr' ? 'Paiements en ligne' : locale === 'ar' ? 'الدفع عبر الإنترنت' : 'Online payments',
+        locale === 'fr' ? 'Demandes de maintenance' : locale === 'ar' ? 'طلبات الصيانة' : 'Maintenance requests',
+        locale === 'fr' ? 'Consultation des annonces' : locale === 'ar' ? 'عرض الإعلانات' : 'View announcements',
+        locale === 'fr' ? 'Espace documentaire' : locale === 'ar' ? 'مساحة المستندات' : 'Document space',
+      ]
     },
   ]
 
   const stats = [
-    { value: '500+', label: t('landing.stats.buildings') },
-    { value: '25,000+', label: t('landing.stats.residents') },
-    { value: '50,000+', label: t('landing.stats.requests') },
-    { value: '99.9%', label: t('landing.stats.uptime') },
+    { value: '500+', label: locale === 'fr' ? 'Résidences' : locale === 'ar' ? 'عقار' : 'Residences', icon: Building2 },
+    { value: '25,000+', label: locale === 'fr' ? 'Résident(s)' : locale === 'ar' ? 'مقيم' : 'Residents', icon: Users },
+    { value: '50,000+', label: locale === 'fr' ? 'Demandes' : locale === 'ar' ? 'طلبات' : 'Requests', icon: Wrench },
+    { value: '99.9%', label: locale === 'fr' ? 'Disponibilité' : locale === 'ar' ? 'التوفر' : 'Uptime', icon: BarChart3 },
+  ]
+
+  const benefits = [
+    {
+      key: 'efficiency',
+      title: locale === 'fr' ? 'Gain de temps' : locale === 'ar' ? 'توفير الوقت' : 'Time Savings',
+      description: locale === 'fr' ? 'Automatisez les tâches récurrentes et concentrez-vous sur l\'essentiel.' : locale === 'ar' ? 'أتمتة المهام المتكررة والتركيز على'essentiel.' : 'Automate recurring tasks and focus on what matters.',
+    },
+    {
+      key: 'transparency',
+      title: locale === 'fr' ? 'Transparence totale' : locale === 'ar' ? 'الشفافية التامة' : 'Total Transparency',
+      description: locale === 'fr' ? 'Tous les résidents ont accès à leurs informations en temps réel.' : locale === 'ar' ? 'جميع المقيمين يمكنهم الوصول إلى معلوماتهم في الوقت الفعلي.' : 'All residents have access to their information in real-time.',
+    },
+    {
+      key: 'security',
+      title: locale === 'fr' ? 'Sécurisé' : locale === 'ar' ? 'آمن' : 'Secure',
+      description: locale === 'fr' ? 'Vos données sont protégées avec les derniers standards de sécurité.' : locale === 'ar' ? 'بياناتك محمية بأحدث معايير الأمان.' : 'Your data is protected with the latest security standards.',
+    },
+    {
+      key: 'support',
+      title: locale === 'fr' ? 'Support réactif' : locale === 'ar' ? 'دعم سريع الاستجابة' : 'Responsive Support',
+      description: locale === 'fr' ? 'Notre équipe est disponible pour vous accompagner.' : locale === 'ar' ? 'فريقنا متاح لمساعدتك.' : 'Our team is available to help you.',
+    },
   ]
 
   return (
@@ -104,13 +205,13 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
             {/* Nav Links - Desktop */}
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-text-secondary hover:text-primary transition-colors">
-                {t('landing.features.title')}
+                {locale === 'fr' ? 'Fonctionnalités' : locale === 'ar' ? 'المميزات' : 'Features'}
+              </a>
+              <a href="#roles" className="text-text-secondary hover:text-primary transition-colors">
+                {locale === 'fr' ? 'Rôles' : locale === 'ar' ? 'الأدوار' : 'Roles'}
               </a>
               <a href="#pricing" className="text-text-secondary hover:text-primary transition-colors">
-                {t('landing.cta.title').split('?')[0]}
-              </a>
-              <a href="#contact" className="text-text-secondary hover:text-primary transition-colors">
-                {t('landing.footer.contact')}
+                {locale === 'fr' ? 'Tarifs' : locale === 'ar' ? 'الأسعار' : 'Pricing'}
               </a>
             </div>
 
@@ -143,11 +244,12 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
                 )}
               </div>
 
-              <Link href={`/${locale}/login`} className="btn-ghost hidden sm:flex">
-                {t('auth.login.title')}
+            <Link href={`/${locale}/login`} className="btn-ghost hidden sm:flex items-center gap-2">
+                <Play className="w-4 h-4" />
+                {locale === 'fr' ? 'Démo' : locale === 'ar' ? 'تجربة' : 'Demo'}
               </Link>
               <Link href={`/${locale}/login`} className="btn-primary">
-                {t('landing.hero.cta')}
+                {t('auth.login.title')}
               </Link>
             </div>
           </div>
@@ -155,57 +257,111 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <section className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 pattern-dots opacity-50" />
-        <div className="absolute top-20 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+        <div className="absolute inset-0 pattern-dots opacity-30" />
+        <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/10 rounded-full blur-3xl" />
 
         <div className="max-w-7xl mx-auto relative">
           <div className="text-center max-w-4xl mx-auto">
+            {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-8 animate-fade-in">
               <span className="w-2 h-2 bg-success rounded-full animate-pulse" />
               <span className="text-sm font-medium text-primary">{t('common.tagline')}</span>
             </div>
 
+            {/* Headline */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-heading font-bold text-text-primary leading-tight mb-6 animate-slide-up">
-              {t('landing.hero.title').split(' ').map((word, i) => 
-                word === 'simplicité' || word === 'البساطة' ? (
-                  <span key={i} className="text-gradient">{word} </span>
-                ) : (
-                  <span key={i}>{word} </span>
-                )
+              {locale === 'fr' ? (
+                <>
+                  La gestion simplifiée{' '}
+                  <span className="text-gradient">des résidences</span>{' '}
+                  au Maroc
+                </>
+              ) : locale === 'ar' ? (
+                <>
+                  إدارة العقارات{' '}
+                  <span className="text-gradient">المبسطة</span>{' '}
+                  في المغرب
+                </>
+              ) : (
+                <>
+                  Simplified{' '}
+                  <span className="text-gradient">residence management</span>{' '}
+                  in Morocco
+                </>
               )}
             </h1>
 
+            {/* Subheadline */}
             <p className="text-xl text-text-secondary max-w-2xl mx-auto mb-10 animate-slide-up animate-stagger-1">
-              {t('landing.hero.subtitle')}
+              {locale === 'fr' ? (
+                <>
+                  Darency est la plateforme tout-en-un pour gérer vos résidences, 
+                  suivre les paiements et communiquer avec vos résidents en toute simplicité.
+                </>
+              ) : locale === 'ar' ? (
+                <>
+                  ديرانسي هي المنصة الشاملة لإدارة عقاراتك وتتبع المدفوعات 
+                  والتواصل مع مقيميكن بسهولة.
+                </>
+              ) : (
+                <>
+                  Darency is the all-in-one platform to manage your residences, 
+                  track payments, and communicate with your residents with ease.
+                </>
+              )}
             </p>
 
+            {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up animate-stagger-2">
-              <Link href={`/${locale}/subscribe`} className="btn-primary text-lg px-8 py-4">
-                {t('landing.hero.cta')}
-                <ArrowRightIcon className="inline-block ml-2 w-5 h-5" />
+              <Link href={`/${locale}/subscribe`} className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
+                {locale === 'fr' ? 'Commencer gratuitement' : locale === 'ar' ? 'ابدأ مجاناً' : 'Start Free'}
+                <ArrowRight className="w-5 h-5" />
               </Link>
-              <Link href={`/${locale}/login`} className="btn-secondary text-lg px-8 py-4">
-                {t('landing.hero.ctaSecondary')}
+              <Link href={`/${locale}/login`} className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
+                <Play className="w-5 h-5" />
+                {locale === 'fr' ? 'Voir la démo' : locale === 'ar' ? 'مشاهدة العرض' : 'Watch Demo'}
               </Link>
+            </div>
+
+            {/* Trust badges */}
+            <div className="mt-12 flex flex-wrap items-center justify-center gap-8 animate-slide-up animate-stagger-3">
+              <div className="flex items-center gap-2 text-text-tertiary">
+                <Check className="w-5 h-5 text-success" />
+                <span className="text-sm">{locale === 'fr' ? 'Essai gratuit de 14 jours' : locale === 'ar' ? 'تجربة مجانية 14 يوم' : '14-day free trial'}</span>
+              </div>
+              <div className="flex items-center gap-2 text-text-tertiary">
+                <Check className="w-5 h-5 text-success" />
+                <span className="text-sm">{locale === 'fr' ? 'Sans engagement' : locale === 'ar' ? 'بدون التزام' : 'No commitment'}</span>
+              </div>
+              <div className="flex items-center gap-2 text-text-tertiary">
+                <Check className="w-5 h-5 text-success" />
+                <span className="text-sm">{locale === 'fr' ? 'Annulable à tout moment' : locale === 'ar' ? 'الإلغاء في أي وقت' : 'Cancel anytime'}</span>
+              </div>
             </div>
           </div>
 
           {/* Dashboard Preview */}
           <div className="mt-20 relative animate-slide-up animate-stagger-3">
-            <div className="bg-surface rounded-2xl shadow-card-hover border border-border overflow-hidden">
-              <div className="h-8 bg-surface-elevated border-b border-border flex items-center gap-2 px-4">
-                <div className="w-3 h-3 rounded-full bg-error/60" />
-                <div className="w-3 h-3 rounded-full bg-warning/60" />
-                <div className="w-3 h-3 rounded-full bg-success/60" />
+            <div className="bg-surface rounded-2xl shadow-2xl border border-border overflow-hidden">
+              <div className="h-10 bg-surface-elevated border-b border-border flex items-center justify-between px-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-error/60" />
+                  <div className="w-3 h-3 rounded-full bg-warning/60" />
+                  <div className="w-3 h-3 rounded-full bg-success/60" />
+                </div>
+                <div className="flex items-center gap-2 text-text-tertiary text-sm">
+                  <Building2 className="w-4 h-4" />
+                  <span>Darency Dashboard</span>
+                </div>
               </div>
               <div className="p-6 grid grid-cols-4 gap-4">
                 {/* Mock Dashboard */}
                 <div className="col-span-3 grid grid-cols-3 gap-4">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="bg-surface-elevated rounded-xl p-4 h-24 animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
+                    <div key={i} className="bg-surface-elevated rounded-xl p-4 h-28 animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
                   ))}
                 </div>
                 <div className="col-span-1 bg-surface-elevated rounded-xl p-4 h-full min-h-[300px]" />
@@ -216,14 +372,18 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-surface-elevated">
+      <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 bg-surface-elevated">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-heading font-bold text-text-primary mb-4">
-              {t('landing.features.title')}
+              {locale === 'fr' ? 'Tout ce dont vous avez besoin' : locale === 'ar' ? 'كل ما تحتاجه' : 'Everything You Need'}
             </h2>
             <p className="text-xl text-text-secondary max-w-2xl mx-auto">
-              {t('landing.features.subtitle')}
+              {locale === 'fr' 
+                ? 'Une suite complète d\'outils pour gérer votre propriété efficacement.' 
+                : locale === 'ar' 
+                ? 'مجموعة شاملة من الأدوات لإدارة عقارك بكفاءة.' 
+                : 'A complete suite of tools to manage your property efficiently.'}
             </p>
           </div>
 
@@ -231,17 +391,55 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
             {features.map((feature, index) => (
               <div
                 key={feature.key}
-                className="card group hover:border-primary/30 transition-all duration-300 animate-slide-up"
+                className="card group hover:border-primary/30 transition-all duration-300 animate-slide-up p-6"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-semibold text-text-primary mb-2">
-                  {t(`landing.features.${feature.key}.title`)}
+                <h3 className="text-xl font-semibold text-text-primary mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-text-secondary leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits / Why Choose Us */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-heading font-bold text-text-primary mb-4">
+              {locale === 'fr' ? 'Pourquoi choisir Darency ?' : locale === 'ar' ? 'لماذا تختار ديرانسي؟' : 'Why Choose Darency?'}
+            </h2>
+            <p className="text-xl text-text-secondary max-w-2xl mx-auto">
+              {locale === 'fr' 
+                ? 'Les avantages qui font de Darency la meilleure solution pour la gestion résidentielle.' 
+                : locale === 'ar' 
+                ? 'المزايا التي تجعل ديرانسي أفضل حل لإدارة العقارات.' 
+                : 'The benefits that make Darency the best solution for residential management.'}
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {benefits.map((benefit, index) => (
+              <div
+                key={benefit.key}
+                className="text-center p-6 animate-slide-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="w-16 h-16 rounded-2xl bg-success/10 flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-8 h-8 text-success" />
+                </div>
+                <h3 className="text-lg font-semibold text-text-primary mb-2">
+                  {benefit.title}
                 </h3>
                 <p className="text-text-secondary">
-                  {t(`landing.features.${feature.key}.description`)}
+                  {benefit.description}
                 </p>
               </div>
             ))}
@@ -250,12 +448,22 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary via-primary-dark to-secondary relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 pattern-dots opacity-10" />
+        
+        <div className="max-w-7xl mx-auto relative">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-heading font-bold text-text-primary mb-4">
-              {t('landing.stats.title')}
+            <h2 className="text-4xl font-heading font-bold text-white mb-4">
+              {locale === 'fr' ? 'Des résultats prouvés' : locale === 'ar' ? 'نتائج مثبتة' : 'Proven Results'}
             </h2>
+            <p className="text-xl text-white/80 max-w-2xl mx-auto">
+              {locale === 'fr' 
+                ? 'Rejoignez les centaines de résidences qui font confiance à Darency.' 
+                : locale === 'ar' 
+                ? 'انضم إلى مئات العقارات التي تثق بديرانسي.' 
+                : 'Join the hundreds of residences that trust Darency.'}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
@@ -265,10 +473,74 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
                 className="text-center animate-slide-up"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="text-5xl font-heading font-bold text-gradient mb-2">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 mb-4">
+                  <stat.icon className="w-8 h-8 text-white" />
+                </div>
+                <div className="text-5xl font-heading font-bold text-white mb-2">
                   {stat.value}
                 </div>
-                <div className="text-text-secondary">{stat.label}</div>
+                <div className="text-white/80">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Roles Section */}
+      <section id="roles" className="py-24 px-4 sm:px-6 lg:px-8 bg-surface-elevated">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-heading font-bold text-text-primary mb-4">
+              {locale === 'fr' ? 'Trois rôles pour une solution complète' : locale === 'ar' ? 'ثلاثة أدوار لحل شامل' : 'Three Roles for a Complete Solution'}
+            </h2>
+            <p className="text-xl text-text-secondary max-w-2xl mx-auto">
+              {locale === 'fr' 
+                ? 'Darency s\'adapte aux besoins de chaque utilisateur.' 
+                : locale === 'ar' 
+                ? 'ديرانسي تتكيف مع احتياجات كل مستخدم.' 
+                : 'Darency adapts to the needs of each user.'}
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {roles.map((role, index) => (
+              <div
+                key={role.key}
+                className="card group hover:border-primary/30 transition-all duration-300 animate-slide-up overflow-hidden"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {/* Role Header */}
+                <div className={`${role.color} p-6 text-white`}>
+                  <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
+                    <role.icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2">{role.title}</h3>
+                  <p className="text-white/90 text-sm leading-relaxed">
+                    {role.description}
+                  </p>
+                </div>
+                
+                {/* Role Features */}
+                <div className="p-6">
+                  <ul className="space-y-3">
+                    {role.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-start gap-3">
+                        <div className="w-5 h-5 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <Check className="w-3 h-3 text-success" />
+                        </div>
+                        <span className="text-text-secondary text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <Link 
+                    href={`/${locale}/login`}
+                    className="mt-6 flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-surface-elevated text-text-primary font-medium hover:bg-primary hover:text-white transition-colors"
+                  >
+                    {locale === 'fr' ? 'Essayer' : locale === 'ar' ? 'جرب' : 'Try'}
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
             ))}
           </div>
@@ -276,18 +548,18 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-surface-elevated">
+      <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-heading font-bold text-text-primary mb-4">
-              Tarifs simples et transparents
+              {locale === 'fr' ? 'Tarifs simples et transparents' : locale === 'ar' ? 'أسعار بسيطة وشفافة' : 'Simple and Transparent Pricing'}
             </h2>
             <p className="text-xl text-text-secondary max-w-2xl mx-auto">
               {locale === 'fr' 
-                ? 'Choisissez le plan qui correspond à vos besoins' 
+                ? 'Choisissez le plan qui correspond à vos besoins. Sans frais cachés.' 
                 : locale === 'ar'
-                ? 'اختر الخطة التي تناسب احتياجاتك'
-                : 'Choose the plan that fits your needs'}
+                ? 'اختر الخطة التي تناسب احتياجاتك. بدون رسوم خفية.'
+                : 'Choose the plan that fits your needs. No hidden fees.'}
             </p>
           </div>
 
@@ -330,16 +602,16 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
                     </div>
                     <div className="text-center mb-6">
                       <div className="flex items-baseline justify-center">
-                        <span className="text-4xl font-bold text-text-primary">
+                        <span className="text-5xl font-bold text-text-primary">
                           {plan.monthlyPrice}
                         </span>
-                        <span className="text-text-secondary ml-2">DH/{locale === 'fr' ? 'mois' : locale === 'ar' ? 'شهر' : 'mo'}</span>
+                        <span className="text-text-secondary ml-2">DH<span className="text-sm">/{locale === 'fr' ? 'mois' : locale === 'ar' ? 'شهر' : 'mo'}</span></span>
                       </div>
                       {plan.yearlyPrice && (
-                        <div className="mt-2">
-                          <p className="text-text-primary font-medium">{plan.yearlyPrice.toLocaleString()} DH {locale === 'fr' ? 'annuel' : locale === 'ar' ? 'سنوي' : '/yr'}</p>
+                        <div className="mt-3">
+                          <p className="text-text-primary font-medium">{plan.yearlyPrice.toLocaleString()} DH <span className="text-sm">{locale === 'fr' ? 'par an' : locale === 'ar' ? 'سنوي' : '/yr'}</span></p>
                           {savings > 0 && (
-                            <p className="text-green-600 text-sm flex items-center justify-center gap-1">
+                            <p className="text-green-600 text-sm flex items-center justify-center gap-1 mt-1">
                               <Check className="w-4 h-4" /> {locale === 'fr' ? 'Économie' : locale === 'ar' ? 'توفير' : 'Save'} {savings}%
                             </p>
                           )}
@@ -348,22 +620,22 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
                     </div>
                     <ul className="space-y-3 mb-8">
                       {plan.features?.slice(0, 5).map((feature, index) => (
-                        <li key={index} className="flex items-start gap-2 text-text-secondary">
+                        <li key={index} className="flex items-start gap-3 text-text-secondary">
                           <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                           <span>{feature}</span>
                         </li>
                       ))}
                     </ul>
-                    <Link
-                      href={`/${locale}/subscribe?plan=${plan.slug}`}
-                      className={`block w-full py-3 px-6 rounded-xl font-semibold text-center transition-colors ${
+                    <button
+                      onClick={() => handlePlanSelect(plan)}
+                      className={`block w-full py-4 px-6 rounded-xl font-semibold text-center transition-colors cursor-pointer ${
                         plan.isPopular 
                           ? 'bg-primary text-white hover:bg-primary-dark' 
                           : 'bg-surface-elevated text-text-primary hover:bg-primary hover:text-white border border-border'
                       }`}
                     >
-                      {locale === 'fr' ? 'Choisir ce plan' : locale === 'ar' ? 'اختر هذه الخطة' : 'Choose Plan'}
-                    </Link>
+                      {locale === 'fr' ? 'Commencer maintenant' : locale === 'ar' ? 'ابدأ الآن' : 'Get Started'}
+                    </button>
                   </div>
                 )
               })}
@@ -373,22 +645,39 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary via-primary-dark to-secondary relative overflow-hidden">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary via-primary-dark to-secondary relative overflow-hidden">
+        {/* Background Pattern */}
         <div className="absolute inset-0 pattern-dots opacity-10" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+        
         <div className="max-w-4xl mx-auto text-center relative">
           <h2 className="text-4xl sm:text-5xl font-heading font-bold text-white mb-6">
-            {t('landing.cta.title')}
+            {locale === 'fr' ? 'Prêt à simplifier la gestion de vos résidences ?' : locale === 'ar' ? 'هل أنت مستعد لتبسيط إدارة عقاراتك؟' : 'Ready to simplify your residence management?'}
           </h2>
           <p className="text-xl text-white/80 mb-10">
-            {t('landing.cta.subtitle')}
+            {locale === 'fr' 
+              ? 'Rejoignez des centaines de gestionnaires qui font confiance à Darency.' 
+              : locale === 'ar'
+              ? 'انضم إلى مئات المديرين الذين يثقون بديرانسي.'
+              : 'Join hundreds of managers who trust Darency.'}
           </p>
-          <Link
-            href={`/${locale}/subscribe`}
-            className="inline-flex items-center gap-2 bg-white text-primary px-8 py-4 rounded-xl font-semibold text-lg hover:bg-surface-elevated transition-colors"
-          >
-            {t('landing.cta.button')}
-            <ArrowRightIcon className="w-5 h-5" />
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href={`/${locale}/subscribe`}
+              className="inline-flex items-center gap-2 bg-white text-primary px-8 py-4 rounded-xl font-semibold text-lg hover:bg-surface-elevated transition-colors"
+            >
+              {locale === 'fr' ? 'Essai gratuit de 14 jours' : locale === 'ar' ? 'تجربة مجانية 14 يوم' : '14-Day Free Trial'}
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link
+              href={`/${locale}/login`}
+              className="inline-flex items-center gap-2 bg-white/10 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white/20 transition-colors border border-white/20"
+            >
+              <Play className="w-5 h-5" />
+              {locale === 'fr' ? 'Voir la démo' : locale === 'ar' ? 'مشاهدة العرض' : 'Watch Demo'}
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -444,6 +733,17 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
           </div>
         </div>
       </footer>
+
+      {/* Subscription Modal */}
+      <SubscriptionModal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedPlan(null)
+        }}
+        plan={selectedPlan}
+        locale={locale}
+      />
     </div>
   )
 }
