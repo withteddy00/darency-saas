@@ -31,7 +31,7 @@ model Organization {
   
   // Current active subscription (for revenue tracking)
   subscriptionId String?
-  subscription   Subscription? @relation(fields: ["subscriptionId"], references: ["id"])
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
   
   // Relations
   users         User[]
