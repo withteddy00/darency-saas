@@ -176,6 +176,25 @@ export async function POST(request: Request) {
       }
     })
 
+    // Create subscription record
+    const price = subscriptionRequest.billingCycle === 'YEARLY' 
+      ? (subscriptionRequest.plan?.yearlyPrice || subscriptionRequest.plan?.price || 0)
+      : (subscriptionRequest.plan?.price || 0)
+    
+    const subscription = await prisma.subscription.create({
+      data: {
+        organizationId: organization.id,
+        planId: subscriptionRequest.planId,
+        billingCycle: subscriptionRequest.billingCycle,
+        price: price,
+        status: 'ACTIVE',
+        startDate: new Date(),
+        endDate: subscriptionRequest.billingCycle === 'YEARLY'
+          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      }
+    })
+
     // Update subscription request
     await prisma.subscriptionRequest.update({
       where: { id: requestId },
@@ -227,12 +246,27 @@ export async function POST(request: Request) {
       },
       residence: {
         id: residence.id,
-        name: residence.name
+        name: residence.name,
+        address: residence.address,
+        city: residence.city,
+        numberOfApartments: residence.numberOfApartments,
+        status: residence.status
       },
       admin: {
         id: admin.id,
+        name: admin.name,
         email: admin.email,
+        phone: admin.phone,
         temporaryPassword: tempPassword
+      },
+      subscription: {
+        id: subscription.id,
+        planName: subscriptionRequest.plan?.name || subscriptionRequest.selectedPlanSlug,
+        billingCycle: subscription.billingCycle,
+        price: subscription.price,
+        status: subscription.status,
+        startDate: subscription.startDate.toISOString(),
+        endDate: subscription.endDate.toISOString()
       }
     })
   } catch (error) {

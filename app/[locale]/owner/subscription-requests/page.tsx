@@ -66,7 +66,9 @@ interface ApprovalResult {
   message: string
   admin?: {
     id: string
+    name: string
     email: string
+    phone: string
     temporaryPassword: string
   }
   organization?: {
@@ -76,6 +78,19 @@ interface ApprovalResult {
   residence?: {
     id: string
     name: string
+    address: string
+    city: string
+    numberOfApartments: number
+    status: string
+  }
+  subscription?: {
+    id: string
+    planName: string
+    billingCycle: string
+    price: number
+    status: string
+    startDate: string
+    endDate: string
   }
 }
 
@@ -650,7 +665,7 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
       {/* Approval Success Modal */}
       {approvalResult && approvalResult.success && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-border text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-8 h-8 text-green-600" />
@@ -662,26 +677,98 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
             <div className="p-6">
               <p className="text-text-secondary mb-6">
                 {locale === 'fr' 
-                  ? 'Organisation et administrateur créés avec succès.'
+                  ? 'Organisation, résidence et administrateur créés avec succès.'
                   : locale === 'ar'
-                  ? 'تم إنشاء المنظمة والمسؤول بنجاح.'
-                  : 'Organization and admin created successfully.'}
+                  ? 'تم إنشاء المنظمة والمسؤول والعقار بنجاح.'
+                  : 'Organization, residence and admin created successfully.'}
               </p>
               
-              <div className="bg-surface-elevated rounded-xl p-4 space-y-4">
-                <div>
-                  <p className="text-xs text-text-tertiary">{locale === 'fr' ? 'Organisation' : locale === 'ar' ? 'المنظمة' : 'Organization'}</p>
-                  <p className="font-medium text-text-primary">{approvalResult.organization?.name}</p>
+              {/* Residence Info */}
+              {approvalResult.residence && (
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-text-secondary uppercase mb-2">
+                    {locale === 'fr' ? 'Résidence créée' : locale === 'ar' ? 'العقار المنشأ' : 'Residence Created'}
+                  </h3>
+                  <div className="bg-surface-elevated rounded-xl p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-text-tertiary">{locale === 'fr' ? 'Nom' : locale === 'ar' ? 'الاسم' : 'Name'}</span>
+                      <span className="font-medium text-text-primary">{approvalResult.residence.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-tertiary">{locale === 'fr' ? 'Adresse' : locale === 'ar' ? 'العنوان' : 'Address'}</span>
+                      <span className="font-medium text-text-primary">{approvalResult.residence.address}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-tertiary">{locale === 'fr' ? 'Ville' : locale === 'ar' ? 'المدينة' : 'City'}</span>
+                      <span className="font-medium text-text-primary">{approvalResult.residence.city}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-tertiary">{locale === 'fr' ? 'Appartements' : locale === 'ar' ? 'الشقق' : 'Apartments'}</span>
+                      <span className="font-medium text-text-primary">{approvalResult.residence.numberOfApartments}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-tertiary">{locale === 'fr' ? 'Statut' : locale === 'ar' ? 'الحالة' : 'Status'}</span>
+                      <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">{approvalResult.residence.status}</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-text-tertiary">{locale === 'fr' ? 'Email admin' : locale === 'ar' ? 'بريد المسؤول' : 'Admin Email'}</p>
-                  <p className="font-medium text-text-primary">{approvalResult.admin?.email}</p>
+              )}
+
+              {/* Subscription Info */}
+              {approvalResult.subscription && (
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-text-secondary uppercase mb-2">
+                    {locale === 'fr' ? 'Abonnement' : locale === 'ar' ? 'الاشتراك' : 'Subscription'}
+                  </h3>
+                  <div className="bg-surface-elevated rounded-xl p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-text-tertiary">{locale === 'fr' ? 'Plan' : locale === 'ar' ? 'الخطة' : 'Plan'}</span>
+                      <span className="font-medium text-text-primary">{approvalResult.subscription.planName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-tertiary">{locale === 'fr' ? 'Facturation' : locale === 'ar' ? 'الفوترة' : 'Billing'}</span>
+                      <span className="font-medium text-text-primary">
+                        {approvalResult.subscription.billingCycle === 'YEARLY' || approvalResult.subscription.billingCycle === 'yearly'
+                          ? (locale === 'fr' ? 'Annuel' : locale === 'ar' ? 'سنوي' : 'Yearly')
+                          : (locale === 'fr' ? 'Mensuel' : locale === 'ar' ? 'شهري' : 'Monthly')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-tertiary">{locale === 'fr' ? 'Prix' : locale === 'ar' ? 'السعر' : 'Price'}</span>
+                      <span className="font-medium text-text-primary">{approvalResult.subscription.price} MAD</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-tertiary">{locale === 'fr' ? 'Statut' : locale === 'ar' ? 'الحالة' : 'Status'}</span>
+                      <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">{approvalResult.subscription.status}</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-text-tertiary">{locale === 'fr' ? 'Mot de passe temporaire' : locale === 'ar' ? 'كلمة المرور المؤقتة' : 'Temporary Password'}</p>
-                  <p className="font-mono font-bold text-lg text-primary bg-white px-3 py-2 rounded-lg border border-border">
-                    {approvalResult.admin?.temporaryPassword}
-                  </p>
+              )}
+
+              {/* Admin Credentials */}
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-text-secondary uppercase mb-2">
+                  {locale === 'fr' ? 'Identifiants administrateur' : locale === 'ar' ? 'بيانات المسؤول' : 'Admin Credentials'}
+                </h3>
+                <div className="bg-surface-elevated rounded-xl p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-text-tertiary">{locale === 'fr' ? 'Nom' : locale === 'ar' ? 'الاسم' : 'Name'}</span>
+                    <span className="font-medium text-text-primary">{approvalResult.admin?.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-tertiary">Email</span>
+                    <span className="font-medium text-text-primary">{approvalResult.admin?.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-tertiary">{locale === 'fr' ? 'Téléphone' : locale === 'ar' ? 'الهاتف' : 'Phone'}</span>
+                    <span className="font-medium text-text-primary">{approvalResult.admin?.phone}</span>
+                  </div>
+                  <div>
+                    <span className="text-text-tertiary">{locale === 'fr' ? 'Mot de passe temporaire' : locale === 'ar' ? 'كلمة المرور المؤقتة' : 'Temporary Password'}</span>
+                    <p className="font-mono font-bold text-lg text-primary bg-white px-3 py-2 rounded-lg border border-border mt-1">
+                      {approvalResult.admin?.temporaryPassword}
+                    </p>
+                  </div>
                 </div>
               </div>
               
