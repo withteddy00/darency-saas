@@ -59,6 +59,26 @@ model SubscriptionPlan {
   // Relations
   subscriptionRequests SubscriptionRequest[]
   organizations Organization[]
+  subscriptions Subscription[]
+}
+
+// Subscription - tracks active subscriptions
+model Subscription {
+  id            String   @id @default(cuid())
+  organizationId String
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  planId        String?
+  plan          SubscriptionPlan? @relation(fields: [planId], references: [id])
+  billingCycle  String   // MONTHLY, YEARLY
+  price         Float    // Price in MAD
+  status        String   @default("ACTIVE") // ACTIVE, SUSPENDED, CANCELLED, EXPIRED
+  startDate     DateTime
+  endDate       DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  payments Payment[]
 }
 
 // Residence (Building complex)
@@ -252,10 +272,12 @@ model Payment {
   updatedAt DateTime @updatedAt
 
   // Relations
-  apartmentId String
-  apartment   Apartment @relation(fields: [apartmentId], references: [id])
-  chargeId    String
-  charge      Charge   @relation(fields: [chargeId], references: [id])
+  apartmentId    String?
+  apartment      Apartment? @relation(fields: [apartmentId], references: [id])
+  chargeId       String?
+  charge         Charge?    @relation(fields: [chargeId], references: [id])
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
 }
 
 // Expense
