@@ -169,7 +169,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
     {
       key: 'efficiency',
       title: locale === 'fr' ? 'Gain de temps' : locale === 'ar' ? 'توفير الوقت' : 'Time Savings',
-      description: locale === 'fr' ? 'Automatisez les tâches récurrentes et concentrez-vous sur l\'essentiel.' : locale === 'ar' ? 'أتمتة المهام المتكررة والتركيز على'essentiel.' : 'Automate recurring tasks and focus on what matters.',
+      description: locale === 'fr' ? 'Automatisez les tâches récurrentes et concentrez-vous sur l\'essentiel.' : locale === 'ar' ? 'أتمتة المهام المتكررة والتركيز على الأساسيات.' : 'Automate recurring tasks and focus on what matters.',
     },
     {
       key: 'transparency',
