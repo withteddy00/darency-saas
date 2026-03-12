@@ -135,6 +135,36 @@ export async function POST(request: Request) {
     const tempPassword = randomBytes(8).toString('hex')
     const hashedPassword = await bcrypt.hash(tempPassword, 12)
 
+    // Check if admin email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: subscriptionRequest.email }
+    })
+
+    if (existingUser) {
+      return NextResponse.json({ 
+        error: 'Cannot approve this request because the admin email already exists.',
+        code: 'DUPLICATE_EMAIL'
+      }, { status: 400 })
+    }
+
+    // Check if organization with same name already exists
+    const orgName = subscriptionRequest.organizationName || subscriptionRequest.residenceName
+    const existingOrg = await prisma.organization.findFirst({
+      where: { 
+        OR: [
+          { email: subscriptionRequest.email },
+          { name: orgName }
+        ]
+      }
+    })
+
+    if (existingOrg) {
+      return NextResponse.json({ 
+        error: 'Cannot approve this request because an organization with this name or email already exists.',
+        code: 'DUPLICATE_ORGANIZATION'
+      }, { status: 400 })
+    }
+
     // Create organization with the plan
     const organization = await prisma.organization.create({
       data: {

@@ -166,7 +166,13 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
       } else {
         const error = await response.json()
         console.error('Approval error response:', error)
-        alert(error.error || error.details || 'Failed to process request')
+        
+        // Show specific error messages for known error codes
+        if (error.code === 'DUPLICATE_EMAIL' || error.code === 'DUPLICATE_ORGANIZATION') {
+          alert(error.error)
+        } else {
+          alert(error.error || error.details || 'Failed to process request')
+        }
       }
     } catch (error) {
       console.error('Error processing request:', error)
