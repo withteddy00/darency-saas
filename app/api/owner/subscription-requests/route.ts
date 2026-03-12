@@ -228,6 +228,15 @@ export async function POST(request: Request) {
         }
       })
 
+      // Update organization with billingCycle and link to subscription
+      await tx.organization.update({
+        where: { id: organization.id },
+        data: {
+          billingCycle: billingCycle,
+          subscriptionId: subscription.id
+        }
+      })
+
       // Update subscription request
       await tx.subscriptionRequest.update({
         where: { id: requestId },
