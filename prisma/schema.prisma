@@ -29,8 +29,9 @@ model Organization {
   subscriptionStatus String @default("ACTIVE") // ACTIVE, SUSPENDED, CANCELLED, EXPIRED
   
   // Relations
-  users      User[]
-  residences Residence[]
+  users         User[]
+  residences    Residence[]
+  subscriptions Subscription[]
 }
 
 // Subscription Plan
