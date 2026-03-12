@@ -328,7 +328,7 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
                           <>
                             <span className="font-medium">{request.plan.name}</span>
                             <span className="text-text-tertiary ml-1">
-                              ({(request.billingCycle === 'yearly' || billingCycle === 'YEARLY' || request.billingCycle === 'YEARLY') && request.plan.yearlyPrice ? request.plan.yearlyPrice : request.plan.price} MAD)
+                              ({(request.billingCycle === 'yearly' || request.billingCycle === 'YEARLY') && request.plan.yearlyPrice ? request.plan.yearlyPrice : request.plan.price} MAD)
                             </span>
                           </>
                         ) : (
@@ -337,11 +337,11 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
                       </td>
                       <td className="px-4 py-4 text-text-primary">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          request.billingCycle === 'yearly' || billingCycle === 'YEARLY' 
+                          request.billingCycle === 'yearly' || request.billingCycle === 'YEARLY' 
                             ? 'bg-blue-100 text-blue-700' 
                             : 'bg-gray-100 text-gray-700'
                         }`}>
-                          {request.billingCycle === 'yearly' || billingCycle === 'YEARLY' 
+                          {request.billingCycle === 'yearly' || request.billingCycle === 'YEARLY' 
                             ? (locale === 'fr' ? 'Annuel' : locale === 'ar' ? 'سنوي' : 'Yearly')
                             : (locale === 'fr' ? 'Mensuel' : locale === 'ar' ? 'شهري' : 'Monthly')}
                         </span>
@@ -505,7 +505,7 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
                   <div>
                     <p className="text-xs text-text-tertiary">{locale === 'fr' ? 'Facturation' : locale === 'ar' ? 'الفوترة' : 'Billing'}</p>
                     <p className="font-medium text-text-primary">
-                      {selectedRequest.billingCycle === 'yearly' || billingCycle === 'YEARLY' 
+                      {selectedRequest.billingCycle === 'yearly' || selectedRequest.billingCycle === 'YEARLY' 
                         ? (locale === 'fr' ? 'Annuel' : locale === 'ar' ? 'سنوي' : 'Yearly')
                         : (locale === 'fr' ? 'Mensuel' : locale === 'ar' ? 'شهري' : 'Monthly')}
                     </p>
@@ -514,11 +514,11 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
                     <div>
                       <p className="text-xs text-text-tertiary">{locale === 'fr' ? 'Prix' : locale === 'ar' ? 'السعر' : 'Price'}</p>
                       <p className="font-medium text-text-primary">
-                        {selectedRequest.billingCycle === 'yearly' || billingCycle === 'YEARLY' && selectedRequest.plan.yearlyPrice 
+                        {(selectedRequest.billingCycle === 'yearly' || selectedRequest.billingCycle === 'YEARLY') && selectedRequest.plan.yearlyPrice 
                           ? `${selectedRequest.plan.yearlyPrice} MAD`
                           : `${selectedRequest.plan.price} MAD`}
                         <span className="text-text-tertiary text-sm">
-                          /{selectedRequest.billingCycle === 'yearly' || billingCycle === 'YEARLY' 
+                          /{selectedRequest.billingCycle === 'yearly' || selectedRequest.billingCycle === 'YEARLY' 
                             ? (locale === 'fr' ? 'an' : locale === 'ar' ? 'سنة' : 'year')
                             : (locale === 'fr' ? 'mois' : locale === 'ar' ? 'شهر' : 'month')}
                         </span>
