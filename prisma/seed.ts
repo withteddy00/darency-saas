@@ -118,20 +118,7 @@ async function main() {
 
   const starterPlan = plans.find(p => p.slug === 'starter')
 
-  // Create subscription first
-  const subscription = await prisma.subscription.create({
-    data: {
-      organizationId: '', // will be updated after org creation
-      planId: starterPlan?.id,
-      billingCycle: 'MONTHLY',
-      price: 299,
-      status: 'ACTIVE',
-      startDate: new Date('2025-01-01'),
-      endDate: new Date('2027-01-01')
-    }
-  })
-
-  // Create organization with subscription reference
+  // Create organization first
   const org = await prisma.organization.create({
     data: {
       name: 'Darency Property Management',
@@ -144,17 +131,23 @@ async function main() {
       planStartDate: new Date('2025-01-01'),
       planEndDate: new Date('2027-01-01'),
       subscriptionStatus: 'ACTIVE',
-      billingCycle: 'MONTHLY',
-      subscriptionId: subscription.id
+      billingCycle: 'MONTHLY'
     }
   })
-
-  // Update subscription with organization ID
-  await prisma.subscription.update({
-    where: { id: subscription.id },
-    data: { organizationId: org.id }
-  })
   console.log('✅ Created Organization:', org.name)
+
+  // Create subscription for the organization
+  const subscription = await prisma.subscription.create({
+    data: {
+      organizationId: org.id,
+      planId: starterPlan?.id,
+      billingCycle: 'MONTHLY',
+      price: 299,
+      status: 'ACTIVE',
+      startDate: new Date('2025-01-01'),
+      endDate: new Date('2027-01-01')
+    }
+  })
 
   // Create subscription payments (simulate 3 monthly payments)
   const subscriptionPayments = await Promise.all([
