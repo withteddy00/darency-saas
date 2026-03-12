@@ -13,13 +13,10 @@ export async function GET() {
     if (!session || session.user.role !== 'OWNER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    const organizationId = session.user.organizationId
-    if (!organizationId) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 400 })
-    }
+    // Owner can see all residences across all organizations
     const residences = await prisma.residence.findMany({
-      where: { organizationId },
       include: {
+        organization: true,
         apartments: true,
         adminUsers: true,
         charges: true,
@@ -46,7 +43,7 @@ export async function GET() {
       const openMaintenanceRequests = maintenanceRequests.filter(m => m.status !== 'COMPLETED' && m.status !== 'CANCELLED').length
       const paidPayments = payments.filter(p => p.status === 'PAID')
       const totalRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0)
-      return { id: residence.id, name: residence.name, address: residence.address, city: residence.city, postalCode: residence.postalCode, description: residence.description, imageUrl: residence.imageUrl, numberOfBuildings: residence.numberOfBuildings, numberOfApartments: residence.numberOfApartments, contactPhone: residence.contactPhone, email: residence.email, notes: residence.notes, status: residence.status, apartments: totalApartments, occupiedApartments, vacantApartments, occupancyRate, residents: residentCount, admin, unpaidCharges: unpaidChargesTotal, totalRevenue, openMaintenanceRequests, createdAt: residence.createdAt }
+      return { id: residence.id, name: residence.name, address: residence.address, city: residence.city, postalCode: residence.postalCode, description: residence.description, imageUrl: residence.imageUrl, numberOfBuildings: residence.numberOfBuildings, numberOfApartments: residence.numberOfApartments, contactPhone: residence.contactPhone, email: residence.email, notes: residence.notes, status: residence.status, organizationId: residence.organizationId, organizationName: residence.organization?.name, apartments: totalApartments, occupiedApartments, vacantApartments, occupancyRate, residents: residentCount, admin, unpaidCharges: unpaidChargesTotal, totalRevenue, openMaintenanceRequests, createdAt: residence.createdAt }
     }))
     const groupedByCity: Record<string, typeof formattedResidences> = {}
     for (const residence of formattedResidences) {

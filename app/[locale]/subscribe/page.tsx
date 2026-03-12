@@ -20,6 +20,7 @@ export default function SubscribePage() {
     rc: '', taxId: '', website: '', notes: ''
   })
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [paymentRef, setPaymentRef] = useState('')
 
@@ -35,6 +36,7 @@ export default function SubscribePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
+    setError(null)
     try {
       const res = await fetch('/api/public/subscription-request', {
         method: 'POST',
@@ -42,8 +44,18 @@ export default function SubscribePage() {
         body: JSON.stringify({ ...formData, planId: selectedPlan?.id, billingCycle })
       })
       const data = await res.json()
-      if (res.ok) { setSuccess(true); setPaymentRef(data.paymentReference || 'DRN-000000') }
-    } finally { setSubmitting(false) }
+      if (res.ok) { 
+        setSuccess(true); 
+        setPaymentRef(data.paymentReference || 'DRN-000000') 
+      } else {
+        // Show error message from API
+        setError(data.error || 'Une erreur est survenue')
+      }
+    } catch (err) {
+      setError('Une erreur est survenue')
+    } finally { 
+      setSubmitting(false) 
+    }
   }
 
   if (success) {
@@ -172,6 +184,11 @@ export default function SubscribePage() {
             {currentStep === 3 && (
               <div className="space-y-4">
                 <textarea placeholder="Notes" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} rows={3} className="w-full px-4 py-3 border rounded-lg" />
+              </div>
+            )}
+            {error && (
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {error}
               </div>
             )}
             <div className="flex justify-between mt-6 pt-4 border-t">

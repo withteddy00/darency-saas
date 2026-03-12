@@ -13,18 +13,16 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get organization ID from the OWNER's session
-    const organizationId = session.user.organizationId
-    
-    if (!organizationId) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 400 })
-    }
-
+    // Owner can see all users across all organizations
     const users = await prisma.user.findMany({
-      where: {
-        organizationId
-      },
       include: {
+        organization: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
+        },
         apartment: {
           include: {
             residence: {
@@ -51,6 +49,8 @@ export async function GET() {
       email: user.email,
       phone: user.phone,
       role: user.role,
+      organizationId: user.organizationId,
+      organizationName: user.organization?.name || null,
       apartment: user.apartment ? {
         number: user.apartment.number,
         building: user.apartment.building,
