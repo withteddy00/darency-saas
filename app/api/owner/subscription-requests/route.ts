@@ -132,6 +132,7 @@ export async function POST(request: Request) {
     }
 
     // Approve the request - create organization, residence, and admin
+    // Use a transaction to ensure atomicity
     const tempPassword = randomBytes(8).toString('hex')
     const hashedPassword = await bcrypt.hash(tempPassword, 12)
 
@@ -165,138 +166,149 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
-    // Create organization with the plan
-    const organization = await prisma.organization.create({
-      data: {
-        name: subscriptionRequest.organizationName || subscriptionRequest.residenceName,
-        slug: (subscriptionRequest.organizationName || subscriptionRequest.residenceName).toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-        email: subscriptionRequest.email,
-        phone: subscriptionRequest.phone,
-        address: subscriptionRequest.address,
-        city: subscriptionRequest.city,
-        planId: subscriptionRequest.planId,
-        subscriptionStatus: 'ACTIVE',
-        planStartDate: new Date(),
-        planEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-      }
-    })
+    // Normalize billingCycle to uppercase for consistency
+    const billingCycle = (subscriptionRequest.billingCycle || 'MONTHLY').toUpperCase()
+    const isYearly = billingCycle === 'YEARLY'
 
-    // Create residence
-    const residence = await prisma.residence.create({
-      data: {
-        name: subscriptionRequest.residenceName,
-        address: subscriptionRequest.address,
-        city: subscriptionRequest.city,
-        numberOfApartments: subscriptionRequest.numberOfApartments,
-        status: 'ACTIVE',
-        organizationId: organization.id
-      }
-    })
+    // Use transaction to ensure atomicity - all or nothing
+    const result = await prisma.$transaction(async (tx) => {
+      // Create organization with the plan
+      const organization = await tx.organization.create({
+        data: {
+          name: subscriptionRequest.organizationName || subscriptionRequest.residenceName,
+          slug: (subscriptionRequest.organizationName || subscriptionRequest.residenceName).toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+          email: subscriptionRequest.email,
+          phone: subscriptionRequest.phone,
+          address: subscriptionRequest.address,
+          city: subscriptionRequest.city,
+          planId: subscriptionRequest.planId,
+          subscriptionStatus: 'ACTIVE',
+          planStartDate: new Date(),
+          planEndDate: isYearly 
+            ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        }
+      })
 
-    // Create admin user
-    const admin = await prisma.user.create({
-      data: {
-        email: subscriptionRequest.email,
-        password: hashedPassword,
-        name: subscriptionRequest.fullName,
-        phone: subscriptionRequest.phone,
-        role: 'ADMIN',
-        organizationId: organization.id,
-        adminForResidenceId: residence.id
-      }
-    })
+      // Create residence
+      const residence = await tx.residence.create({
+        data: {
+          name: subscriptionRequest.residenceName,
+          address: subscriptionRequest.address,
+          city: subscriptionRequest.city,
+          numberOfApartments: subscriptionRequest.numberOfApartments,
+          status: 'ACTIVE',
+          organizationId: organization.id
+        }
+      })
 
-    // Create subscription record
-    const price = subscriptionRequest.billingCycle === 'YEARLY' 
-      ? (subscriptionRequest.plan?.yearlyPrice || subscriptionRequest.plan?.price || 0)
-      : (subscriptionRequest.plan?.price || 0)
-    
-    const subscription = await prisma.subscription.create({
-      data: {
-        organizationId: organization.id,
-        planId: subscriptionRequest.planId,
-        billingCycle: subscriptionRequest.billingCycle,
-        price: price,
-        status: 'ACTIVE',
-        startDate: new Date(),
-        endDate: subscriptionRequest.billingCycle === 'YEARLY'
-          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      }
-    })
+      // Create admin user
+      const admin = await tx.user.create({
+        data: {
+          email: subscriptionRequest.email,
+          password: hashedPassword,
+          name: subscriptionRequest.fullName,
+          phone: subscriptionRequest.phone,
+          role: 'ADMIN',
+          organizationId: organization.id,
+          adminForResidenceId: residence.id
+        }
+      })
 
-    // Update subscription request
-    await prisma.subscriptionRequest.update({
-      where: { id: requestId },
-      data: {
-        status: 'APPROVED',
-        password: tempPassword,
-        activatedAt: new Date(),
-        adminNotes: notes || 'Approved - Organization and admin created'
-      }
-    })
+      // Create subscription record
+      const price = isYearly 
+        ? (subscriptionRequest.plan?.yearlyPrice || subscriptionRequest.plan?.price || 0)
+        : (subscriptionRequest.plan?.price || 0)
+      
+      const subscription = await tx.subscription.create({
+        data: {
+          organizationId: organization.id,
+          planId: subscriptionRequest.planId,
+          billingCycle: billingCycle,
+          price: price,
+          status: 'ACTIVE',
+          startDate: new Date(),
+          endDate: isYearly
+            ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        }
+      })
 
-    // Create history entry
-    await prisma.subscriptionRequestHistory.create({
-      data: {
-        subscriptionRequestId: requestId,
-        action: 'APPROVED',
-        description: `Approved - Created organization "${organization.name}" and admin account`,
-        performedBy: session.user.email
-      }
-    })
+      // Update subscription request
+      await tx.subscriptionRequest.update({
+        where: { id: requestId },
+        data: {
+          status: 'APPROVED',
+          password: tempPassword,
+          activatedAt: new Date(),
+          adminNotes: notes || 'Approved - Organization and admin created'
+        }
+      })
 
-    // Log activity
+      // Create history entry
+      await tx.subscriptionRequestHistory.create({
+        data: {
+          subscriptionRequestId: requestId,
+          action: 'APPROVED',
+          description: `Approved - Created organization "${organization.name}" and admin account`,
+          performedBy: session.user.email
+        }
+      })
+
+      return { organization, residence, admin, subscription }
+    }) // End transaction
+
+    // Log activity (outside transaction - logging should not fail the main operation)
     await logActivity({
       action: 'APPROVE',
       target: 'SubscriptionRequest',
       targetId: requestId,
-      description: `Approved subscription request - Created organization "${organization.name}" with admin ${admin.email}`,
+      description: `Approved subscription request - Created organization "${result.organization.name}" with admin ${result.admin.email}`,
       metadata: {
-        organizationId: organization.id,
-        residenceId: residence.id,
-        adminId: admin.id
+        organizationId: result.organization.id,
+        residenceId: result.residence.id,
+        adminId: result.admin.id
       },
       userId: session.user.id,
       userName: session.user.name,
       userEmail: session.user.email,
       userRole: session.user.role,
-      organizationId: organization.id,
-      residenceId: residence.id,
-      residenceName: residence.name
-    })
+      organizationId: result.organization.id,
+      residenceId: result.residence.id,
+      residenceName: result.residence.name
+    }).catch(console.error)
 
     return NextResponse.json({
       success: true,
       message: 'Request approved - Organization and admin created',
       organization: {
-        id: organization.id,
-        name: organization.name,
-        slug: organization.slug
+        id: result.organization.id,
+        name: result.organization.name,
+        slug: result.organization.slug
       },
       residence: {
-        id: residence.id,
-        name: residence.name,
-        address: residence.address,
-        city: residence.city,
-        numberOfApartments: residence.numberOfApartments,
-        status: residence.status
+        id: result.residence.id,
+        name: result.residence.name,
+        address: result.residence.address,
+        city: result.residence.city,
+        numberOfApartments: result.residence.numberOfApartments,
+        status: result.residence.status
       },
       admin: {
-        id: admin.id,
-        name: admin.name,
-        email: admin.email,
-        phone: admin.phone,
+        id: result.admin.id,
+        name: result.admin.name,
+        email: result.admin.email,
+        phone: result.admin.phone,
         temporaryPassword: tempPassword
       },
       subscription: {
-        id: subscription.id,
+        id: result.subscription.id,
         planName: subscriptionRequest.plan?.name || subscriptionRequest.selectedPlanSlug,
-        billingCycle: subscription.billingCycle,
-        price: subscription.price,
-        status: subscription.status,
-        startDate: subscription.startDate.toISOString(),
-        endDate: subscription.endDate.toISOString()
+        billingCycle: result.subscription.billingCycle,
+        price: result.subscription.price,
+        status: result.subscription.status,
+        startDate: result.subscription.startDate.toISOString(),
+        endDate: result.subscription.endDate.toISOString()
       }
     })
   } catch (error) {
