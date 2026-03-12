@@ -31,12 +31,12 @@ model Organization {
   
   // Current active subscription (for revenue tracking)
   subscriptionId String?
-  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  subscription   Subscription? @relation("ActiveSubscription", fields: [subscriptionId], references: [id])
   
   // Relations
   users         User[]
   residences    Residence[]
-  subscriptions Subscription[]
+  subscriptions Subscription[] @relation("OrganizationSubscriptions")
 }
 
 // Subscription Plan
@@ -65,14 +65,14 @@ model SubscriptionPlan {
   // Relations
   subscriptionRequests SubscriptionRequest[]
   organizations Organization[]
-  subscriptions Subscription[]
+  subscriptions Subscription[] @relation("OrganizationSubscriptions")
 }
 
 // Subscription - tracks active subscriptions
 model Subscription {
   id            String   @id @default(cuid())
   organizationId String
-  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization  Organization @relation("OrganizationSubscriptions", fields: [organizationId], references: [id], onDelete: Cascade)
   planId        String?
   plan          SubscriptionPlan? @relation(fields: [planId], references: [id])
   billingCycle  String   // MONTHLY, YEARLY
@@ -283,7 +283,7 @@ model Payment {
   chargeId       String?
   charge         Charge?    @relation(fields: [chargeId], references: [id])
   subscriptionId String?
-  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  subscription   Subscription? @relation("SubscriptionPayments", fields: [subscriptionId], references: [id])
 }
 
 // Expense
