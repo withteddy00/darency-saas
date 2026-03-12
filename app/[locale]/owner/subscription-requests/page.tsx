@@ -168,6 +168,8 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
     switch (status) {
       case 'PENDING':
         return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full flex items-center gap-1"><Clock className="w-3 h-3" /> En attente</span>
+      case 'WAITING_PAYMENT':
+        return <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full flex items-center gap-1"><Clock className="w-3 h-3" /> En attente paiement</span>
       case 'APPROVED':
         return <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Approuvé</span>
       case 'REJECTED':
@@ -266,7 +268,7 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
         <div className="flex gap-2 mb-6">
-          {(['ALL', 'PENDING', 'APPROVED', 'REJECTED'] as const).map((f) => (
+          {(['ALL', 'PENDING', 'WAITING_PAYMENT', 'APPROVED', 'REJECTED'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -278,6 +280,7 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
             >
               {f === 'ALL' && translations.all}
               {f === 'PENDING' && translations.pending}
+              {f === 'WAITING_PAYMENT' && (locale === 'fr' ? 'En attente paiement' : locale === 'ar' ? 'في انتظار الدفع' : 'Awaiting Payment')}
               {f === 'APPROVED' && translations.approved}
               {f === 'REJECTED' && translations.rejected}
             </button>
@@ -325,7 +328,7 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
                           <>
                             <span className="font-medium">{request.plan.name}</span>
                             <span className="text-text-tertiary ml-1">
-                              ({request.billingCycle === 'yearly' && request.plan.yearlyPrice ? request.plan.yearlyPrice : request.plan.price} MAD)
+                              ({(request.billingCycle === 'yearly' || billingCycle === 'YEARLY' || request.billingCycle === 'YEARLY') && request.plan.yearlyPrice ? request.plan.yearlyPrice : request.plan.price} MAD)
                             </span>
                           </>
                         ) : (
@@ -334,11 +337,11 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
                       </td>
                       <td className="px-4 py-4 text-text-primary">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          request.billingCycle === 'yearly' 
+                          request.billingCycle === 'yearly' || billingCycle === 'YEARLY' 
                             ? 'bg-blue-100 text-blue-700' 
                             : 'bg-gray-100 text-gray-700'
                         }`}>
-                          {request.billingCycle === 'yearly' 
+                          {request.billingCycle === 'yearly' || billingCycle === 'YEARLY' 
                             ? (locale === 'fr' ? 'Annuel' : locale === 'ar' ? 'سنوي' : 'Yearly')
                             : (locale === 'fr' ? 'Mensuel' : locale === 'ar' ? 'شهري' : 'Monthly')}
                         </span>
@@ -359,6 +362,29 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
                           </button>
                           
                           {request.status === 'PENDING' && (
+                            <>
+                              <button
+                                onClick={() => handleAction(request.id, 'approve')}
+                                disabled={processing === request.id}
+                                className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-1"
+                              >
+                                {processing === request.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                                {translations.approve}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedRequest(request)
+                                  setShowRejectModal(true)
+                                }}
+                                disabled={processing === request.id}
+                                className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-1"
+                              >
+                                <XCircle className="w-4 h-4" />
+                                {translations.reject}
+                              </button>
+                            </>
+                          )}
+                          {request.status === 'WAITING_PAYMENT' && (
                             <>
                               <button
                                 onClick={() => handleAction(request.id, 'approve')}
@@ -479,7 +505,7 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
                   <div>
                     <p className="text-xs text-text-tertiary">{locale === 'fr' ? 'Facturation' : locale === 'ar' ? 'الفوترة' : 'Billing'}</p>
                     <p className="font-medium text-text-primary">
-                      {selectedRequest.billingCycle === 'yearly' 
+                      {selectedRequest.billingCycle === 'yearly' || billingCycle === 'YEARLY' 
                         ? (locale === 'fr' ? 'Annuel' : locale === 'ar' ? 'سنوي' : 'Yearly')
                         : (locale === 'fr' ? 'Mensuel' : locale === 'ar' ? 'شهري' : 'Monthly')}
                     </p>
@@ -488,11 +514,11 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
                     <div>
                       <p className="text-xs text-text-tertiary">{locale === 'fr' ? 'Prix' : locale === 'ar' ? 'السعر' : 'Price'}</p>
                       <p className="font-medium text-text-primary">
-                        {selectedRequest.billingCycle === 'yearly' && selectedRequest.plan.yearlyPrice 
+                        {selectedRequest.billingCycle === 'yearly' || billingCycle === 'YEARLY' && selectedRequest.plan.yearlyPrice 
                           ? `${selectedRequest.plan.yearlyPrice} MAD`
                           : `${selectedRequest.plan.price} MAD`}
                         <span className="text-text-tertiary text-sm">
-                          /{selectedRequest.billingCycle === 'yearly' 
+                          /{selectedRequest.billingCycle === 'yearly' || billingCycle === 'YEARLY' 
                             ? (locale === 'fr' ? 'an' : locale === 'ar' ? 'سنة' : 'year')
                             : (locale === 'fr' ? 'mois' : locale === 'ar' ? 'شهر' : 'month')}
                         </span>
@@ -543,7 +569,7 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
             </div>
 
             {/* Modal Actions */}
-            {selectedRequest.status === 'PENDING' && (
+            {(selectedRequest.status === 'PENDING' || selectedRequest.status === 'WAITING_PAYMENT') && (
               <div className="p-6 border-t border-border flex gap-3 justify-end">
                 <button
                   onClick={() => setSelectedRequest(null)}

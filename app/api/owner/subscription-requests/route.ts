@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Request not found' }, { status: 404 })
     }
 
-    if (subscriptionRequest.status !== 'PENDING') {
+    if (subscriptionRequest.status !== 'PENDING' && subscriptionRequest.status !== 'WAITING_PAYMENT') {
       return NextResponse.json({ error: 'Request has already been processed' }, { status: 400 })
     }
 
