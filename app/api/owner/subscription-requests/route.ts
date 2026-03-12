@@ -51,6 +51,8 @@ export async function GET() {
         taxId: r.taxId,
         website: r.website,
         paymentReference: r.paymentReference,
+        bankTransferProofUrl: r.bankTransferProofUrl,
+        bankTransferProofName: r.bankTransferProofName,
         status: r.status,
         adminNotes: r.adminNotes,
         createdAt: r.createdAt.toISOString(),
