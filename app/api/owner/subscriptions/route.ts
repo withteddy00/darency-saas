@@ -26,7 +26,6 @@ export async function GET(request: Request) {
       include: {
         plan: true,
         subscriptions: {
-          where: { status: 'ACTIVE' },
           orderBy: { startDate: 'desc' },
           take: 1
         },
@@ -70,7 +69,8 @@ export async function GET(request: Request) {
           price: activeSubscription?.price || org.plan.price,
           billingCycle: activeSubscription?.billingCycle || org.billingCycle || 'MONTHLY'
         } : null,
-        subscriptionStatus: org.subscriptionStatus,
+        subscriptionStatus: activeSubscription?.status || org.subscriptionStatus,
+        subscriptionId: activeSubscription?.id || null,
         planStartDate: activeSubscription?.startDate?.toISOString() || org.planStartDate.toISOString(),
         planEndDate: activeSubscription?.endDate?.toISOString() || org.planEndDate?.toISOString(),
         billingCycle: activeSubscription?.billingCycle || org.billingCycle || 'MONTHLY',

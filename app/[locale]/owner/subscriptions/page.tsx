@@ -32,6 +32,7 @@ interface Subscription {
     billingCycle: string
   } | null
   subscriptionStatus: string
+  subscriptionId: string | null
   planStartDate: string
   planEndDate: string | null
   residences: {
@@ -145,6 +146,35 @@ export default function SubscriptionsManagementPage({ params }: { params: { loca
     }
   }
 
+  const handleValidatePayment = async (subscriptionId: string, amount: number, billingCycle: string) => {
+    if (!confirm(`Valider le paiement de ${amount} MAD (${billingCycle === 'YEARLY' ? 'annuel' : 'mensuel'}) ?`)) {
+      return
+    }
+    
+    setProcessing(subscriptionId)
+    try {
+      const response = await fetch(`/api/owner/subscriptions/${subscriptionId}/validate-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, method: 'TRANSFER' })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        alert(result.message)
+        fetchData()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to validate payment')
+      }
+    } catch (error) {
+      console.error('Error validating payment:', error)
+      alert('Failed to validate payment')
+    } finally {
+      setProcessing(null)
+    }
+  }
+
   const handleChangePlan = async () => {
     if (!selectedSub || !selectedPlanId) return
     
@@ -183,6 +213,8 @@ export default function SubscriptionsManagementPage({ params }: { params: { loca
     switch (status) {
       case 'ACTIVE':
         return <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full flex items-center gap-1"><Play className="w-3 h-3" /> Actif</span>
+      case 'INACTIVE':
+        return <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full flex items-center gap-1"><Pause className="w-3 h-3" /> Inactif</span>
       case 'SUSPENDED':
         return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full flex items-center gap-1"><Pause className="w-3 h-3" /> Suspendu</span>
       case 'CANCELLED':
@@ -389,6 +421,16 @@ export default function SubscriptionsManagementPage({ params }: { params: { loca
                       </td>
                       <td className="px-4 py-4">
                         <div className="flex gap-2 flex-wrap">
+                          {sub.subscriptionStatus === 'INACTIVE' && sub.subscriptionId && (
+                            <button
+                              onClick={() => handleValidatePayment(sub.subscriptionId!, sub.plan?.price || 0, sub.plan?.billingCycle || 'MONTHLY')}
+                              disabled={processing === sub.id}
+                              className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-lg hover:bg-green-200 transition-colors disabled:opacity-50"
+                              title="Valider paiement"
+                            >
+                              <CreditCard className="w-3 h-3" />
+                            </button>
+                          )}
                           {sub.subscriptionStatus === 'ACTIVE' && (
                             <>
                               <button

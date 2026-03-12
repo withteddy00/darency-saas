@@ -191,7 +191,7 @@ export async function POST(request: Request) {
           address: subscriptionRequest.address,
           city: subscriptionRequest.city,
           numberOfApartments: subscriptionRequest.numberOfApartments,
-          status: 'ACTIVE',
+          status: 'INACTIVE',
           organizationId: organization.id
         }
       })
@@ -220,7 +220,7 @@ export async function POST(request: Request) {
           planId: subscriptionRequest.planId,
           billingCycle: billingCycle,
           price: price,
-          status: 'ACTIVE',
+          status: 'INACTIVE',
           startDate: new Date(),
           endDate: isYearly
             ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
