@@ -109,14 +109,22 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+  const handleFormNext = () => {
     if (!validateForm()) return
+    // Move to payment step without submitting yet
+    setStep('payment')
+  }
+
+  const handleSubmitWithPayment = async () => {
+    if (!file) {
+      setErrors({ ...errors, file: locale === 'fr' ? 'La preuve de paiement est requise' : locale === 'ar' ? 'مطلوب إثبات الدفع' : 'Payment proof is required' })
+      return
+    }
     
     setLoading(true)
     try {
-      const response = await fetch('/api/public/subscription-request', {
+      // First create the subscription request
+      const subResponse = await fetch('/api/public/subscription-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -128,13 +136,32 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
         })
       })
       
-      const data = await response.json()
+      const subData = await subResponse.json()
       
-      if (response.ok) {
-        setPaymentReference(data.paymentReference)
-        setStep('payment')
+      if (!subResponse.ok) {
+        setErrors({ submit: subData.error || (locale === 'fr' ? 'Erreur lors de la soumission' : locale === 'ar' ? 'خطأ في الإرسال' : 'Submission error') })
+        setLoading(false)
+        return
+      }
+      
+      setPaymentReference(subData.paymentReference)
+      
+      // Then upload the payment proof
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', file)
+      formDataUpload.append('paymentReference', subData.paymentReference)
+      
+      const proofResponse = await fetch('/api/public/payment-proof', {
+        method: 'POST',
+        body: formDataUpload
+      })
+      
+      const proofData = await proofResponse.json()
+      
+      if (proofResponse.ok) {
+        setStep('success')
       } else {
-        setErrors({ submit: data.error || (locale === 'fr' ? 'Erreur lors de la soumission' : locale === 'ar' ? 'خطأ في الإرسال' : 'Submission error') })
+        setErrors({ submit: proofData.error || (locale === 'fr' ? 'Erreur lors de l\'upload' : locale === 'ar' ? 'خطأ في الرفع' : 'Upload error') })
       }
     } catch (error) {
       setErrors({ submit: locale === 'fr' ? 'Erreur de connexion' : locale === 'ar' ? 'خطأ في الاتصال' : 'Connection error' })
@@ -170,34 +197,6 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
       } else {
         setFilePreview(null)
       }
-    }
-  }
-
-  const handleUploadProof = async () => {
-    if (!file || !paymentReference) return
-    
-    setUploading(true)
-    try {
-      const formDataUpload = new FormData()
-      formDataUpload.append('file', file)
-      formDataUpload.append('paymentReference', paymentReference)
-      
-      const response = await fetch('/api/public/payment-proof', {
-        method: 'POST',
-        body: formDataUpload
-      })
-      
-      const data = await response.json()
-      
-      if (response.ok) {
-        setStep('success')
-      } else {
-        setErrors({ ...errors, file: data.error || (locale === 'fr' ? 'Erreur lors de l\'upload' : locale === 'ar' ? 'خطأ في الرفع' : 'Upload error') })
-      }
-    } catch (error) {
-      setErrors({ ...errors, file: locale === 'fr' ? 'Erreur de connexion' : locale === 'ar' ? 'خطأ في الاتصال' : 'Connection error' })
-    } finally {
-      setUploading(false)
     }
   }
 
@@ -496,66 +495,69 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
 
               {/* Submit Button */}
               <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 px-6 bg-primary text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary-dark transition-colors disabled:opacity-50"
+                type="button"
+                onClick={handleFormNext}
+                className="w-full py-3 px-6 bg-primary text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary-dark transition-colors"
               >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    {translations.submit}
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
+                {locale === 'fr' ? 'Continuer vers le paiement' : locale === 'ar' ? 'المتابعة للدفع' : 'Continue to Payment'}
+                <ArrowRight className="w-5 h-5" />
               </button>
             </form>
           )}
 
           {step === 'payment' && (
             <div className="space-y-6">
-              {/* Payment Instructions */}
-              <div className="bg-surface-elevated rounded-xl p-4">
-                <p className="text-text-secondary text-sm mb-4">{translations.paymentInstructions}</p>
+              {/* Step Indicator */}
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
+                  <Check className="w-4 h-4 text-white" />
+                </div>
+                <div className="w-8 h-0.5 bg-primary" />
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">2</span>
+                </div>
+              </div>
+
+              {/* Bank Transfer Instructions */}
+              <div className="bg-surface-elevated rounded-xl p-6 border border-border">
+                <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-primary" />
+                  {locale === 'fr' ? 'Informations bancaires' : locale === 'ar' ? 'المعلومات المصرفية' : 'Bank Information'}
+                </h3>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-text-secondary">{translations.beneficiary}</span>
+                    <span className="text-text-secondary">{locale === 'fr' ? 'Bénéficiaire' : locale === 'ar' ? 'المستفيد' : 'Beneficiary'}</span>
                     <span className="font-semibold text-text-primary">DARENCY</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-text-secondary">{translations.bank}</span>
+                    <span className="text-text-secondary">{locale === 'fr' ? 'Banque' : locale === 'ar' ? 'البنك' : 'Bank'}</span>
                     <span className="font-semibold text-text-primary">Banque Populaire</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-text-secondary">{translations.rib}</span>
+                    <span className="text-text-secondary">{locale === 'fr' ? 'RIB' : locale === 'ar' ? 'الرقم الدولي' : 'IBAN'}</span>
                     <span className="font-mono text-sm text-text-primary">123456789012345678901234</span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-text-secondary">{translations.amount}</span>
-                    <span className="font-bold text-lg text-primary">{price} MAD</span>
+                  <div className="flex justify-between py-2">
+                    <span className="text-text-secondary">{locale === 'fr' ? 'Montant' : locale === 'ar' ? 'المبلغ' : 'Amount'}</span>
+                    <span className="font-bold text-xl text-primary">{price} MAD</span>
                   </div>
                 </div>
               </div>
 
-              {/* Payment Reference */}
-              <div className="bg-primary/10 border border-primary/20 rounded-xl p-4">
-                <p className="text-sm text-text-secondary mb-2">{translations.reference}</p>
-                <p className="text-3xl font-mono font-bold text-center text-primary tracking-wider">{paymentReference}</p>
-                <p className="text-center text-text-secondary text-sm mt-2">{translations.includeReference}</p>
-              </div>
-
-              {/* Divider */}
-              <div className="flex items-center gap-4">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-text-tertiary text-sm">{translations.or}</span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
+              {/* Payment Reference - will be shown after submission */}
+              {paymentReference && (
+                <div className="bg-primary/10 border border-primary/20 rounded-xl p-4">
+                  <p className="text-sm text-text-secondary mb-2">{locale === 'fr' ? 'Référence de paiement' : locale === 'ar' ? 'مرجع الدفع' : 'Payment Reference'}</p>
+                  <p className="text-3xl font-mono font-bold text-center text-primary tracking-wider">{paymentReference}</p>
+                  <p className="text-center text-text-secondary text-sm mt-2">{locale === 'fr' ? 'Incluez cette référence dans votre virement' : locale === 'ar' ? 'أدخل هذا المرجع في تحويلك' : 'Include this reference in your transfer'}</p>
+                </div>
+              )}
 
               {/* Upload Section */}
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">
-                  {translations.uploadProof}
+                  {translations.uploadProof} <span className="text-error">*</span>
                 </label>
                 <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors">
                   {file ? (
@@ -598,24 +600,29 @@ export function SubscriptionModal({ isOpen, onClose, plan, locale }: Subscriptio
                 {errors.file && <p className="text-error text-sm mt-1">{errors.file}</p>}
               </div>
 
-              {/* Upload Button */}
-              {file && (
-                <button
-                  type="button"
-                  onClick={handleUploadProof}
-                  disabled={uploading}
-                  className="w-full py-3 px-6 bg-primary text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary-dark transition-colors disabled:opacity-50"
-                >
-                  {uploading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      {translations.uploadSubmit}
-                      <Check className="w-5 h-5" />
-                    </>
-                  )}
-                </button>
+              {/* Error Message */}
+              {errors.submit && (
+                <div className="p-3 bg-error/10 border border-error/20 rounded-lg text-error text-sm">
+                  {errors.submit}
+                </div>
               )}
+
+              {/* Submit Button - submits both request and proof */}
+              <button
+                type="button"
+                onClick={handleSubmitWithPayment}
+                disabled={loading || !file}
+                className="w-full py-3 px-6 bg-primary text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary-dark transition-colors disabled:opacity-50"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    {locale === 'fr' ? 'Soumettre la demande' : locale === 'ar' ? 'إرسال الطلب' : 'Submit Request'}
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
 
               {/* Back Button */}
               <button
