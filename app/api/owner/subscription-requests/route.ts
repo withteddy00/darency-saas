@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-log'
 import { randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
+import { processSubscriptionRequestSchema } from '@/lib/validations/subscription'
+import { validateBody } from '@/lib/validations/helpers'
 
 // GET - List all subscription requests
 export async function GET() {
@@ -76,15 +78,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { action, requestId, notes } = body
-
-    if (!requestId || !action) {
-      return NextResponse.json({ error: 'Request ID and action are required' }, { status: 400 })
+    
+    // Validate request body with Zod
+    const validation = validateBody(processSubscriptionRequestSchema, body)
+    if (validation instanceof NextResponse) {
+      return validation
     }
-
-    if (!['approve', 'reject'].includes(action)) {
-      return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
-    }
+    
+    const { action, requestId, notes } = validation
 
     const subscriptionRequest = await prisma.subscriptionRequest.findUnique({
       where: { id: requestId },
