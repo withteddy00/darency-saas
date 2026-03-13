@@ -20,12 +20,13 @@
 import { NextResponse } from 'next/server'
 import { getServerSession, Session } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { UserRole } from '@/lib/enums'
+
+export { UserRole }
 
 // ============================================
 // Types
 // ============================================
-
-export type UserRole = 'OWNER' | 'ADMIN' | 'RESIDENT'
 
 export interface AuthUser {
   id: string
@@ -111,28 +112,28 @@ export async function requireRole(...allowedRoles: UserRole[]): Promise<AuthUser
  * Require OWNER role - platform-wide access
  */
 export async function requireOwner(): Promise<AuthUser | NextResponse<AuthError>> {
-  return requireRole('OWNER')
+  return requireRole(UserRole.OWNER)
 }
 
 /**
  * Require ADMIN role - residence-level access
  */
 export async function requireAdmin(): Promise<AuthUser | NextResponse<AuthError>> {
-  return requireRole('ADMIN')
+  return requireRole(UserRole.ADMIN)
 }
 
 /**
  * Require RESIDENT role - apartment-level access
  */
 export async function requireResident(): Promise<AuthUser | NextResponse<AuthError>> {
-  return requireRole('RESIDENT')
+  return requireRole(UserRole.RESIDENT)
 }
 
 /**
  * Require ADMIN or OWNER
  */
 export async function requireAdminOrOwner(): Promise<AuthUser | NextResponse<AuthError>> {
-  return requireRole('ADMIN', 'OWNER')
+  return requireRole(UserRole.ADMIN, UserRole.OWNER)
 }
 
 /**
@@ -198,15 +199,15 @@ export type TenantScope =
  * - RESIDENT: apartment-specific scope
  */
 export function getTenantScope(user: AuthUser): TenantScope {
-  if (user.role === 'OWNER') {
+  if (user.role === UserRole.OWNER) {
     return { type: 'organization', organizationId: user.organizationId }
   }
   
-  if (user.role === 'ADMIN' && user.residenceId) {
+  if (user.role === UserRole.ADMIN && user.residenceId) {
     return { type: 'residence', residenceId: user.residenceId }
   }
   
-  if (user.role === 'RESIDENT' && user.apartmentId) {
+  if (user.role === UserRole.RESIDENT && user.apartmentId) {
     return { type: 'apartment', apartmentId: user.apartmentId }
   }
   
@@ -240,7 +241,7 @@ export function createTenantFilter(user: AuthUser): Record<string, unknown> {
  * ADMIN users can only access their assigned residence
  */
 export function createResidenceFilter(user: AuthUser): Record<string, unknown> {
-  if (user.role === 'ADMIN' && user.residenceId) {
+  if (user.role === UserRole.ADMIN && user.residenceId) {
     return { residenceId: user.residenceId }
   }
   // OWNER sees all residences
@@ -251,7 +252,7 @@ export function createResidenceFilter(user: AuthUser): Record<string, unknown> {
  * Create apartment-scoped filter (for RESIDENT users)
  */
 export function createApartmentFilter(user: AuthUser): Record<string, unknown> {
-  if (user.role === 'RESIDENT' && user.apartmentId) {
+  if (user.role === UserRole.RESIDENT && user.apartmentId) {
     return { id: user.apartmentId }
   }
   // ADMIN sees all apartments in their residence
@@ -267,12 +268,12 @@ export function validateResidenceAccess(
   targetResidenceId: string
 ): boolean {
   // OWNER can access any residence
-  if (user.role === 'OWNER') {
+  if (user.role === UserRole.OWNER) {
     return true
   }
   
   // ADMIN can only access their assigned residence
-  if (user.role === 'ADMIN') {
+  if (user.role === UserRole.ADMIN) {
     return user.residenceId === targetResidenceId
   }
   
