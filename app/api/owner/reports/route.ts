@@ -199,7 +199,7 @@ export async function GET() {
         type: 'payment',
         amount: p.amount,
         date: p.paidDate?.toISOString(),
-        description: `Payment - ${p.apartment.number} - ${p.apartment.residence.name}`
+        description: `Payment - ${p.apartment?.number || 'N/A'} - ${p.apartment?.residence?.name || 'N/A'}`
       }))
     })
   } catch (error) {

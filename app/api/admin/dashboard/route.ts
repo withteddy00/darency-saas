@@ -178,11 +178,11 @@ export async function GET() {
         method: p.method,
         paidDate: p.paidDate?.toISOString(),
         dueDate: p.dueDate.toISOString(),
-        apartment: p.apartment.number,
-        building: p.apartment.building,
-        chargeTitle: p.charge.title,
-        month: p.charge.month,
-        year: p.charge.year
+        apartment: p.apartment?.number || 'N/A',
+        building: p.apartment?.building || 'N/A',
+        chargeTitle: p.charge?.title || 'N/A',
+        month: p.charge?.month || 0,
+        year: p.charge?.year || 0
       })),
       recentMaintenanceRequests: recentMaintenanceRequests.map(m => ({
         id: m.id,
@@ -191,8 +191,8 @@ export async function GET() {
         status: m.status,
         priority: m.priority,
         category: m.category,
-        apartment: m.apartment.number,
-        building: m.apartment.building,
+        apartment: m.apartment?.number || 'N/A',
+        building: m.apartment?.building || 'N/A',
         reportedBy: m.reportedBy.name,
         createdAt: m.createdAt.toISOString(),
         updatedAt: m.updatedAt.toISOString(),

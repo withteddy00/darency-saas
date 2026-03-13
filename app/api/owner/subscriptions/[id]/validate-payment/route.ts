@@ -59,7 +59,7 @@ export async function POST(
           paidDate: new Date(),
           dueDate: new Date(),
           subscriptionId: subscription.id,
-          description: notes || `Payment for ${subscription.billingCycle.toLowerCase()}ly subscription`
+          notes: notes || `Payment for ${subscription.billingCycle.toLowerCase()}ly subscription`
         }
       })
 
@@ -85,6 +85,9 @@ export async function POST(
     // Log activity
     await logActivity({
       action: 'PAYMENT_VALIDATED',
+      target: 'Subscription',
+      targetId: subscription.id,
+      description: `Payment of ${paymentAmount} MAD validated for ${subscription.organization.name}`,
       userId: session.user.id,
       organizationId: subscription.organizationId,
       metadata: {

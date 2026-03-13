@@ -173,7 +173,7 @@ export async function GET() {
           amount: latestPayment.amount,
           method: latestPayment.method,
           paidDate: latestPayment.paidDate!.toISOString(),
-          chargeTitle: latestPayment.charge.title
+          chargeTitle: latestPayment.charge?.title || 'N/A'
         } : null,
         recent: payments.slice(0, 10).map(p => ({
           id: p.id,
@@ -182,9 +182,9 @@ export async function GET() {
           method: p.method,
           paidDate: p.paidDate?.toISOString(),
           dueDate: p.dueDate.toISOString(),
-          chargeTitle: p.charge.title,
-          month: p.charge.month,
-          year: p.charge.year
+          chargeTitle: p.charge?.title || 'N/A',
+          month: p.charge?.month || 0,
+          year: p.charge?.year || 0
         }))
       },
       monthlyPayments,

@@ -102,7 +102,7 @@ export default function SubscriptionRequestsPage({ params }: { params: { locale:
   const [requests, setRequests] = useState<SubscriptionRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL')
+  const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'WAITING_PAYMENT' | 'APPROVED' | 'REJECTED'>('ALL')
   const [selectedRequest, setSelectedRequest] = useState<SubscriptionRequest | null>(null)
   const [approvalResult, setApprovalResult] = useState<ApprovalResult | null>(null)
   const [showRejectModal, setShowRejectModal] = useState(false)

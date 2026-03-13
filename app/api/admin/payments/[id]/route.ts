@@ -61,11 +61,11 @@ export async function GET(request: Request) {
       dueDate: payment.dueDate.toISOString(),
       paidDate: payment.paidDate?.toISOString() || null,
       notes: payment.notes,
-      apartment: {
+      apartment: payment.apartment ? {
         number: payment.apartment.number,
         building: payment.apartment.building,
         residence: payment.apartment.residence
-      },
+      } : null,
       charge: payment.charge,
       createdAt: payment.createdAt.toISOString(),
       updatedAt: payment.updatedAt.toISOString()
