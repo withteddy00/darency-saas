@@ -18,7 +18,6 @@ interface Plan {
 
 interface LandingPageClientProps {
   locale: string
-  t: (key: string) => string
 }
 
 /**
@@ -27,8 +26,14 @@ interface LandingPageClientProps {
  * - Modal state
  * - Language switching
  * - All user interactions
+ * 
+ * Note: Translations are handled internally via useTranslations hook
+ * to avoid passing functions from Server Components to Client Components
  */
-export function LandingPageClient({ locale, t }: LandingPageClientProps) {
+export function LandingPageClient({ locale }: LandingPageClientProps) {
+  // Use the translation hook internally - this works because
+  // TranslationProvider wraps this component in the layout
+  const t = useTranslations(locale)
   const [plans, setPlans] = useState<Plan[]>([])
   const [loadingPlans, setLoadingPlans] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)

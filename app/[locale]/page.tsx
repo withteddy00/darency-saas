@@ -202,7 +202,8 @@ export default function LandingPage({ params }: LandingPageProps) {
       </section>
 
       {/* Client Components - Interactive Parts */}
-      <LandingPageClient locale={locale} t={t} />
+      {/* Note: t function is NOT passed - client components use useTranslations hook internally */}
+      <LandingPageClient locale={locale} />
     </>
   )
 }
