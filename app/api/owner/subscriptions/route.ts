@@ -37,25 +37,39 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' }
     })
 
-    // Calculate revenue for each organization based on subscription payments
+    // Calculate revenue for each organization based on subscription payments AND charge payments from residences
     const orgsWithStats = await Promise.all(organizations.map(async (org) => {
-      // Get the current/active subscription
-      const activeSubscription = org.subscriptions && org.subscriptions.length > 0 
-        ? org.subscriptions[0] 
+      // Get the current/active subscription (filter by ACTIVE status)
+      const activeSubscription = org.subscriptions && org.subscriptions.length > 0
+        ? org.subscriptions.find((s: any) => s.status === 'ACTIVE') || org.subscriptions[0]
         : null
-      
-      // Calculate revenue from subscription payments
+
       let totalRevenue = 0
+
+      // 1. Get revenue from subscription payments (owner paying for the subscription)
       if (activeSubscription) {
-        // Get all PAID payments for this subscription
         const subscriptionPayments = await prisma.payment.findMany({
-          where: { 
+          where: {
             subscriptionId: activeSubscription.id,
             status: 'PAID'
           }
         })
-        totalRevenue = subscriptionPayments.reduce((sum, p) => sum + p.amount, 0)
+        totalRevenue += subscriptionPayments.reduce((sum, p) => sum + p.amount, 0)
       }
+
+      // 2. Get revenue from charge payments made by residents in this organization's residences
+      // This is the main revenue source - residents paying their apartment charges
+      const residencePayments = await prisma.payment.findMany({
+        where: {
+          charge: {
+            residence: {
+              organizationId: org.id
+            }
+          },
+          status: 'PAID'
+        }
+      })
+      totalRevenue += residencePayments.reduce((sum, p) => sum + p.amount, 0)
 
       return {
         id: org.id,

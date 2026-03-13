@@ -53,9 +53,12 @@
     "reports": "التقارير"
   },
   "landing": {
-    "hero": {"title": "إدارة مبانيك بسهولة", "subtitle": "دارينسي هي منصة إدارة العقارات في المغرب", "cta": "ابدأ مجاناً", "ctaSecondary": "شاهد العرض"},
-    "features": {"title": "كل ما تحتاجه", "buildings": {"title": "إدارة المباني"}, "residents": {"title": "دليل المقيمين"}, "finances": {"title": "المالية"}, "maintenance": {"title": "الصيانة"}, "reports": {"title": "التقارير"}},
-    "cta": {"title": "مستعد للبدء؟", "button": "تجربة مجانية"}
+    "hero": {"title": "إدارة مبانيك بسهولة", "subtitle": "دارينسي هي منصة إدارة العقارات الأكثر شمولاً في المغرب. قم بمزامنة المدفوعات وطلبات الصيانة والتواصل مع المقيمين.", "cta": "ابدأ مجاناً", "ctaSecondary": "شاهد العرض التوضيحي", "learnMore": "اعرف المزيد", "dashboardPreview": "معاينة لوحة التحكم"},
+    "nav": {"features": "الميزات", "pricing": "الأسعار", "contact": "اتصل بنا", "login": "تسجيل الدخول", "getStarted": "ابدأ الآن"},
+    "pricing": {"title": "أسعار تناسب احتياجاتك", "subtitle": "اختر الخطة التي تناسب نشاطك التجاري", "popular": "الأكثر شعبية", "save": "وفر", "choose": "اختيار", "perMonth": "/شهر"},
+    "features": {"title": "كل ما تحتاجه", "buildings": {"title": "إدارة المباني", "description": "إدارة المباني والعناوين والتفاصيل"}, "residents": {"title": "دليل المقيمين", "description": "تتبع جميع المقيمين والمالكين"}, "finances": {"title": "المالية", "description": "تتبع المصروفات والمدفوعات"}, "maintenance": {"title": "الصيانة", "description": "تلقي وإدارة طلبات الصيانة"}, "communication": {"title": "التواصل", "description": "إرسال الإشعارات والتواصل"}, "reports": {"title": "التقارير", "description": "لوحات معلومات مفصلة"}},
+    "cta": {"title": "مستعد للبدء؟", "subtitle": "انضم لمئات العملاء", "button": "تجربة مجانية"},
+    "footer": {"tagline": "إدارة المباني المبسطة في المغرب", "product": "المنتج", "company": "الشركة", "legal": "قانوني", "contact": "اتصل بنا", "privacy": "سياسة الخصوصية", "terms": "الشروط", "copyright": "© 2024 دارينسي. جميع الحقوق محفوظة."}
   },
   "dashboard": {"welcome": "مرحباً", "overview": "نظرة عامة", "recentActivity": "النشاط الأخير", "quickActions": "إجراءات سريعة", "viewAll": "عرض الكل", "stats": {"buildings": "المباني", "residents": "المقيمون", "pendingRequests": "طلبات معلقة", "monthlyRevenue": "الإيرادات"}},
   "buildings": {"title": "المباني", "add": "إضافة مبنى", "list": {"name": "الاسم", "address": "العنوان", "residents": "المقيمون", "actions": "الإجراءات"}, "form": {"name": "اسم المبنى", "address": "العنوان", "city": "المدينة", "postalCode": "الرمز البريدي", "description": "الوصف"}},
