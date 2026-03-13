@@ -4,6 +4,8 @@ import { getServerSession } from 'next-auth'
 import bcrypt from 'bcryptjs'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { createUserSchema } from '@/lib/validations/user'
+import { validateBody } from '@/lib/validations/helpers'
 
 export async function GET() {
   try {
@@ -82,11 +84,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { name, email, phone, role, residenceId, apartmentId, password } = body
-
-    if (!name || !email || !role) {
-      return NextResponse.json({ error: 'Name, email and role are required' }, { status: 400 })
+    
+    // Validate request body with Zod
+    const validation = validateBody(createUserSchema, body)
+    if (validation instanceof NextResponse) {
+      return validation
     }
+    
+    const { name, email, phone, role, residenceId, apartmentId, password } = validation
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({

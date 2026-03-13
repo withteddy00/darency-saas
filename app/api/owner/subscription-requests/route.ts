@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-log'
 import { randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
+import { processSubscriptionRequestSchema } from '@/lib/validations/subscription'
+import { validateBody } from '@/lib/validations/helpers'
 
 // GET - List all subscription requests
 export async function GET() {
@@ -76,15 +78,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { action, requestId, notes } = body
-
-    if (!requestId || !action) {
-      return NextResponse.json({ error: 'Request ID and action are required' }, { status: 400 })
+    
+    // Validate request body with Zod
+    const validation = validateBody(processSubscriptionRequestSchema, body)
+    if (validation instanceof NextResponse) {
+      return validation
     }
-
-    if (!['approve', 'reject'].includes(action)) {
-      return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
-    }
+    
+    const { action, requestId, notes } = validation
 
     const subscriptionRequest = await prisma.subscriptionRequest.findUnique({
       where: { id: requestId },
@@ -191,7 +192,8 @@ export async function POST(request: Request) {
           address: subscriptionRequest.address,
           city: subscriptionRequest.city,
           numberOfApartments: subscriptionRequest.numberOfApartments,
-          status: 'INACTIVE',
+          numberOfBuildings: subscriptionRequest.numberOfBuildings,
+          status: 'ACTIVE',
           organizationId: organization.id
         }
       })
@@ -209,6 +211,14 @@ export async function POST(request: Request) {
         }
       })
 
+      // Create Admin record for backward compatibility
+      await tx.admin.create({
+        data: {
+          userId: admin.id,
+          residenceId: residence.id
+        }
+      })
+
       // Create subscription record
       const price = isYearly 
         ? (subscriptionRequest.plan?.yearlyPrice || subscriptionRequest.plan?.price || 0)
@@ -220,7 +230,7 @@ export async function POST(request: Request) {
           planId: subscriptionRequest.planId,
           billingCycle: billingCycle,
           price: price,
-          status: 'INACTIVE',
+          status: 'ACTIVE',
           startDate: new Date(),
           endDate: isYearly
             ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)

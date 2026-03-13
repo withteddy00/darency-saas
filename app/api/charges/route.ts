@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { createChargeSchema } from '@/lib/validations/finance'
+import { validateBody } from '@/lib/validations/helpers'
 
 export const dynamic = 'force-dynamic'
 
@@ -85,11 +87,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { title, category, amount, month, year, apartmentId, description } = body
-
-    if (!title || !amount || !month || !year || !apartmentId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    
+    // Validate request body with Zod
+    const validation = validateBody(createChargeSchema, body)
+    if (validation instanceof NextResponse) {
+      return validation
     }
+    
+    const { title, category, amount, month, year, apartmentId, description } = validation
 
     // Verify the apartment belongs to this admin's residence
     const apartment = await prisma.apartment.findFirst({
