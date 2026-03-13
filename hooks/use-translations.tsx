@@ -1,54 +1,48 @@
 'use client'
 
 import React, { useState, useEffect, createContext, useContext } from 'react'
-import frTranslations from '@/lib/locales/fr/translation.json'
-import arTranslations from '@/lib/locales/ar/translation.json'
-
-const translations: Record<string, any> = {
-  fr: frTranslations,
-  ar: arTranslations,
-}
+import { i18n, Locale, getDirection } from '@/lib/i18n/config'
+import { getTranslation, getTranslations } from '@/lib/i18n/dictionary'
 
 interface TranslationContextType {
-  locale: string
+  locale: Locale
   t: (key: string) => string
+  translations: ReturnType<typeof getTranslations>
   isRTL: boolean
 }
 
 const TranslationContext = createContext<TranslationContextType | undefined>(undefined)
 
-export function TranslationProvider({ 
-  children, 
-  locale 
-}: { 
+export function TranslationProvider({
+  children,
+  locale
+}: {
   children: React.ReactNode
-  locale: string 
+  locale: string
 }) {
-  const [dir, setDir] = useState(locale === 'ar' ? 'rtl' : 'ltr')
+  const validLocale = i18n.locales.includes(locale as Locale) ? locale as Locale : i18n.defaultLocale as Locale
+  const [dir, setDir] = useState(getDirection(validLocale))
+  const [translations, setTranslations] = useState(() => getTranslations(validLocale))
 
   useEffect(() => {
-    document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr'
-    document.documentElement.lang = locale
-    setDir(locale === 'ar' ? 'rtl' : 'ltr')
+    const newLocale = i18n.locales.includes(locale as Locale) ? locale as Locale : i18n.defaultLocale as Locale
+    document.documentElement.dir = getDirection(newLocale)
+    document.documentElement.lang = newLocale
+    setDir(getDirection(newLocale))
+    setTranslations(getTranslations(newLocale))
   }, [locale])
 
   const t = (key: string): string => {
-    const keys = key.split('.')
-    let result: unknown = translations[locale]
-    
-    for (const k of keys) {
-      if (result && typeof result === 'object' && k in result) {
-        result = (result as Record<string, unknown>)[k]
-      } else {
-        return key
-      }
-    }
-    
-    return typeof result === 'string' ? result : key
+    return getTranslation(validLocale, key)
   }
 
   return (
-    <TranslationContext.Provider value={{ locale, t, isRTL: locale === 'ar' }}>
+    <TranslationContext.Provider value={{ 
+      locale: validLocale, 
+      t, 
+      translations,
+      isRTL: validLocale === 'ar' 
+    }}>
       <div dir={dir}>
         {children}
       </div>
@@ -56,26 +50,44 @@ export function TranslationProvider({
   )
 }
 
+/**
+ * Hook to use translations within a component
+ * @param locale - The locale string (e.g., 'fr', 'ar')
+ * @returns Translation function (key) => string
+ */
 export function useTranslations(locale: string) {
+  const context = useContext(TranslationContext)
+
+  // If used within TranslationProvider, use context
+  if (context) {
+    return context.t
+  }
+
+  // Fallback: direct access (for components outside provider)
+  const validLocale = i18n.locales.includes(locale as Locale) 
+    ? locale as Locale 
+    : i18n.defaultLocale as Locale
+
+  return (key: string): string => getTranslation(validLocale, key)
+}
+
+/**
+ * Hook to get the current locale and translations
+ * @returns Object with locale, translations, t function, and isRTL
+ */
+export function useLocale() {
   const context = useContext(TranslationContext)
   
   if (!context) {
-    const t = (key: string): string => {
-      const keys = key.split('.')
-      let result: unknown = translations[locale]
-      
-      for (const k of keys) {
-        if (result && typeof result === 'object' && k in result) {
-          result = (result as Record<string, unknown>)[k]
-        } else {
-          return key
-        }
-      }
-      
-      return typeof result === 'string' ? result : key
+    // Fallback to default
+    const defaultLocale = i18n.defaultLocale as Locale
+    return {
+      locale: defaultLocale,
+      translations: getTranslations(defaultLocale),
+      t: (key: string) => getTranslation(defaultLocale, key),
+      isRTL: defaultLocale === 'ar',
     }
-    return t
   }
   
-  return context.t
+  return context
 }
