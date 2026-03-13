@@ -136,42 +136,36 @@ export async function POST(request: Request) {
     const tempPassword = randomBytes(8).toString('hex')
     const hashedPassword = await bcrypt.hash(tempPassword, 12)
 
-    // Check if admin email already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: subscriptionRequest.email }
-    })
-
-    if (existingUser) {
-      return NextResponse.json({ 
-        error: 'Cannot approve this request because the admin email already exists.',
-        code: 'DUPLICATE_EMAIL'
-      }, { status: 400 })
-    }
-
-    // Check if organization with same name already exists
-    const orgName = subscriptionRequest.organizationName || subscriptionRequest.residenceName
-    const existingOrg = await prisma.organization.findFirst({
-      where: { 
-        OR: [
-          { email: subscriptionRequest.email },
-          { name: orgName }
-        ]
-      }
-    })
-
-    if (existingOrg) {
-      return NextResponse.json({ 
-        error: 'Cannot approve this request because an organization with this name or email already exists.',
-        code: 'DUPLICATE_ORGANIZATION'
-      }, { status: 400 })
-    }
-
     // Normalize billingCycle to uppercase for consistency
     const billingCycle = (subscriptionRequest.billingCycle || 'MONTHLY').toUpperCase()
     const isYearly = billingCycle === 'YEARLY'
 
     // Use transaction to ensure atomicity - all or nothing
     const result = await prisma.$transaction(async (tx) => {
+      // Check if admin email already exists (inside transaction to prevent race conditions)
+      const existingUser = await tx.user.findUnique({
+        where: { email: subscriptionRequest.email }
+      })
+
+      if (existingUser) {
+        throw new Error('DUPLICATE_EMAIL: Cannot approve this request because the admin email already exists.')
+      }
+
+      // Check if organization with same name already exists (inside transaction)
+      const orgName = subscriptionRequest.organizationName || subscriptionRequest.residenceName
+      const existingOrg = await tx.organization.findFirst({
+        where: { 
+          OR: [
+            { email: subscriptionRequest.email },
+            { name: orgName }
+          ]
+        }
+      })
+
+      if (existingOrg) {
+        throw new Error('DUPLICATE_ORGANIZATION: Cannot approve this request because an organization with this name or email already exists.')
+      }
+
       // Create organization with the plan
       const organization = await tx.organization.create({
         data: {
@@ -197,7 +191,7 @@ export async function POST(request: Request) {
           address: subscriptionRequest.address,
           city: subscriptionRequest.city,
           numberOfApartments: subscriptionRequest.numberOfApartments,
-          status: 'ACTIVE',
+          status: 'INACTIVE',
           organizationId: organization.id
         }
       })
@@ -226,7 +220,7 @@ export async function POST(request: Request) {
           planId: subscriptionRequest.planId,
           billingCycle: billingCycle,
           price: price,
-          status: 'ACTIVE',
+          status: 'INACTIVE',
           startDate: new Date(),
           endDate: isYearly
             ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
@@ -234,6 +228,7 @@ export async function POST(request: Request) {
         }
       })
 
+      
       // Update subscription request
       await tx.subscriptionRequest.update({
         where: { id: requestId },
@@ -315,6 +310,22 @@ export async function POST(request: Request) {
     console.error('Error processing subscription request:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     const errorStack = error instanceof Error ? error.stack : ''
+    
+    // Handle custom error codes from transaction
+    if (errorMessage.startsWith('DUPLICATE_EMAIL:')) {
+      return NextResponse.json({ 
+        error: errorMessage.replace('DUPLICATE_EMAIL: ', ''),
+        code: 'DUPLICATE_EMAIL'
+      }, { status: 400 })
+    }
+    
+    if (errorMessage.startsWith('DUPLICATE_ORGANIZATION:')) {
+      return NextResponse.json({ 
+        error: errorMessage.replace('DUPLICATE_ORGANIZATION: ', ''),
+        code: 'DUPLICATE_ORGANIZATION'
+      }, { status: 400 })
+    }
+    
     return NextResponse.json({ 
       error: 'Failed to process request',
       details: errorMessage,

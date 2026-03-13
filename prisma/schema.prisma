@@ -27,6 +27,8 @@ model Organization {
   planStartDate DateTime @default(now())
   planEndDate   DateTime?
   subscriptionStatus String @default("ACTIVE") // ACTIVE, SUSPENDED, CANCELLED, EXPIRED
+  billingCycle  String   @default("MONTHLY") // MONTHLY, YEARLY
+  
   
   // Relations
   users         User[]

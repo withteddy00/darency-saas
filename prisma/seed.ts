@@ -17,21 +17,8 @@ async function main() {
   await prisma.user.deleteMany()
   await prisma.organization.deleteMany()
 
-  // Create Organization
-  const org = await prisma.organization.create({
-    data: {
-      name: 'Darency Property Management',
-      slug: 'darency',
-      email: 'contact@darency.ma',
-      phone: '+212 522 123 456',
-      address: '123 Avenue Mohammed V, Casablanca',
-      city: 'Casablanca'
-    }
-  })
-  console.log('✅ Created Organization:', org.name)
-
   // =====================================================
-  // CREATE SUBSCRIPTION PLANS
+  // CREATE SUBSCRIPTION PLANS FIRST
   // =====================================================
   
   const plans = await Promise.all([
@@ -124,6 +111,78 @@ async function main() {
     })
   ])
   console.log('✅ Created Subscription Plans:', plans.map(p => p.name).join(', '))
+
+  // =====================================================
+  // CREATE ORGANIZATION WITH SUBSCRIPTION
+  // =====================================================
+
+  const starterPlan = plans.find(p => p.slug === 'starter')
+
+  // Create organization first
+  const org = await prisma.organization.create({
+    data: {
+      name: 'Darency Property Management',
+      slug: 'darency',
+      email: 'contact@darency.ma',
+      phone: '+212 522 123 456',
+      address: '123 Avenue Mohammed V, Casablanca',
+      city: 'Casablanca',
+      planId: starterPlan?.id,
+      planStartDate: new Date('2025-01-01'),
+      planEndDate: new Date('2027-01-01'),
+      subscriptionStatus: 'ACTIVE',
+      billingCycle: 'MONTHLY'
+    }
+  })
+  console.log('✅ Created Organization:', org.name)
+
+  // Create subscription for the organization
+  const subscription = await prisma.subscription.create({
+    data: {
+      organizationId: org.id,
+      planId: starterPlan?.id,
+      billingCycle: 'MONTHLY',
+      price: 299,
+      status: 'ACTIVE',
+      startDate: new Date('2025-01-01'),
+      endDate: new Date('2027-01-01')
+    }
+  })
+
+  // Create subscription payments (simulate 3 monthly payments)
+  const subscriptionPayments = await Promise.all([
+    prisma.payment.create({
+      data: {
+        amount: 299,
+        status: 'PAID',
+        method: 'TRANSFER',
+        paidDate: new Date('2025-01-01'),
+        dueDate: new Date('2025-01-31'),
+        subscriptionId: subscription.id
+      }
+    }),
+    prisma.payment.create({
+      data: {
+        amount: 299,
+        status: 'PAID',
+        method: 'TRANSFER',
+        paidDate: new Date('2025-02-01'),
+        dueDate: new Date('2025-02-28'),
+        subscriptionId: subscription.id
+      }
+    }),
+    prisma.payment.create({
+      data: {
+        amount: 299,
+        status: 'PAID',
+        method: 'TRANSFER',
+        paidDate: new Date('2025-03-01'),
+        dueDate: new Date('2025-03-31'),
+        subscriptionId: subscription.id
+      }
+    })
+  ])
+  console.log('✅ Created subscription with 3 monthly payments (897 MAD total)')
 
   // =====================================================
   // CREATE MULTIPLE RESIDENCES (for testing admin scoping)

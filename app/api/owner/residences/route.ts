@@ -30,7 +30,7 @@ export async function GET() {
       const vacantApartments = totalApartments - occupiedApartments
       const occupancyRate = totalApartments > 0 ? Math.round((occupiedApartments / totalApartments) * 100) : 0
       const residentCount = await prisma.user.count({ where: { role: 'RESIDENT', apartment: { residenceId: residence.id } } })
-      const admin = residence.adminUsers.length > 0 ? residence.adminUsers[0].user : null
+      const admin = residence.adminUsers.length > 0 ? residence.adminUsers[0] : null
       const charges = await prisma.charge.findMany({ where: { residenceId: residence.id } })
       const payments = await prisma.payment.findMany({ where: { charge: { residenceId: residence.id } } })
       let unpaidChargesTotal = 0

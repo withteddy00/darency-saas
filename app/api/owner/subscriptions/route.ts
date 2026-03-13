@@ -25,6 +25,10 @@ export async function GET(request: Request) {
       where,
       include: {
         plan: true,
+        subscriptions: {
+          orderBy: { startDate: 'desc' },
+          take: 1
+        },
         residences: {
           select: { id: true, name: true, city: true, status: true }
         },
@@ -33,15 +37,25 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' }
     })
 
-    // Calculate revenue for each organization
+    // Calculate revenue for each organization based on subscription payments
     const orgsWithStats = await Promise.all(organizations.map(async (org) => {
-      const charges = await prisma.charge.findMany({
-        where: { residence: { organizationId: org.id } }
-      })
-      const payments = await prisma.payment.findMany({
-        where: { charge: { residence: { organizationId: org.id } }, status: 'PAID' }
-      })
-      const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0)
+      // Get the current/active subscription
+      const activeSubscription = org.subscriptions && org.subscriptions.length > 0 
+        ? org.subscriptions[0] 
+        : null
+      
+      // Calculate revenue from subscription payments
+      let totalRevenue = 0
+      if (activeSubscription) {
+        // Get all PAID payments for this subscription
+        const subscriptionPayments = await prisma.payment.findMany({
+          where: { 
+            subscriptionId: activeSubscription.id,
+            status: 'PAID'
+          }
+        })
+        totalRevenue = subscriptionPayments.reduce((sum, p) => sum + p.amount, 0)
+      }
 
       return {
         id: org.id,
@@ -52,11 +66,14 @@ export async function GET(request: Request) {
         plan: org.plan ? {
           id: org.plan.id,
           name: org.plan.name,
-          price: org.plan.price
+          price: activeSubscription?.price || org.plan.price,
+          billingCycle: activeSubscription?.billingCycle || org.billingCycle || 'MONTHLY'
         } : null,
-        subscriptionStatus: org.subscriptionStatus,
-        planStartDate: org.planStartDate.toISOString(),
-        planEndDate: org.planEndDate?.toISOString(),
+        subscriptionStatus: activeSubscription?.status || org.subscriptionStatus,
+        subscriptionId: activeSubscription?.id || null,
+        planStartDate: activeSubscription?.startDate?.toISOString() || org.planStartDate.toISOString(),
+        planEndDate: activeSubscription?.endDate?.toISOString() || org.planEndDate?.toISOString(),
+        billingCycle: activeSubscription?.billingCycle || org.billingCycle || 'MONTHLY',
         residences: org.residences,
         usersCount: org._count.users,
         residencesCount: org._count.residences,
