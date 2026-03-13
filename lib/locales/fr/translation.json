@@ -57,7 +57,24 @@
       "title": "Gérez vos immeubles en toute simplicité",
       "subtitle": "Darency est la plateforme de gestion de propriétés la plus complète au Maroc. Synchronisez les paiements, les demandes de maintenance et la communication avec les résidents.",
       "cta": "Commencer gratuitement",
-      "ctaSecondary": "Voir la démo"
+      "ctaSecondary": "Voir la démo",
+      "learnMore": "En savoir plus",
+      "dashboardPreview": "Aperçu du tableau de bord"
+    },
+    "nav": {
+      "features": "Fonctionnalités",
+      "pricing": "Tarifs",
+      "contact": "Contact",
+      "login": "Connexion",
+      "getStarted": "Commencer"
+    },
+    "pricing": {
+      "title": "Des tarifs adaptés à vos besoins",
+      "subtitle": "Choisissez le plan qui correspond le mieux à votre activité",
+      "popular": "Plus populaire",
+      "save": "Économisez",
+      "choose": "Choisir",
+      "perMonth": "/mois"
     },
     "features": {
       "title": "Tout ce dont vous avez besoin",
