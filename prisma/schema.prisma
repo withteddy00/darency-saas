@@ -119,6 +119,11 @@ model Residence {
 
   // For ADMIN users who manage this residence
   adminUsers User[] @relation("AdminResidence")
+
+  // Indexes for performance
+  @@index([organizationId])
+  @@index([status])
+  @@index([city])
 }
 
 // User (can be OWNER, ADMIN, or RESIDENT linked to Apartment)
@@ -157,6 +162,11 @@ model User {
   maintenanceRequests MaintenanceRequest[]
   announcements       Announcement[]
   uploadedDocuments   Document[]
+
+  // Indexes for performance
+  @@index([organizationId])
+  @@index([role])
+  @@index([adminForResidenceId])
 }
 
 // Admin profile (specific to a Residence)
@@ -206,6 +216,10 @@ model Apartment {
   documents          Document[]
 
   @@unique([residenceId, number])
+
+  // Indexes for performance
+  @@index([residenceId])
+  @@index([status])
 }
 
 // Apartment Occupancy History - tracks all occupants over time
@@ -260,6 +274,12 @@ model Charge {
   apartmentId String
   apartment   Apartment @relation(fields: [apartmentId], references: [id])
   payments    Payment[]
+
+  // Indexes for performance
+  @@index([residenceId])
+  @@index([apartmentId])
+  @@index([dueDate])
+  @@index([year, month])
 }
 
 // Payment
@@ -281,6 +301,12 @@ model Payment {
   charge         Charge?    @relation(fields: [chargeId], references: [id])
   subscriptionId String?
   subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  // Indexes for performance
+  @@index([status])
+  @@index([apartmentId])
+  @@index([chargeId])
+  @@index([dueDate])
 }
 
 // Expense
@@ -377,6 +403,11 @@ model SubscriptionRequest {
 
   // History for traceability
   history         SubscriptionRequestHistory[]
+
+  // Indexes for performance
+  @@index([status])
+  @@index([createdAt])
+  @@index([email])
 }
 
 // Subscription Request History - tracks all changes for traceability
