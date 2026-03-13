@@ -210,6 +210,14 @@ export async function POST(request: Request) {
         }
       })
 
+      // Create Admin record for backward compatibility
+      await tx.admin.create({
+        data: {
+          userId: admin.id,
+          residenceId: residence.id
+        }
+      })
+
       // Create subscription record
       const price = isYearly 
         ? (subscriptionRequest.plan?.yearlyPrice || subscriptionRequest.plan?.price || 0)
